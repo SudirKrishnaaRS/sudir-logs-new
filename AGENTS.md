@@ -28,7 +28,10 @@ docs/<track>/glossary.mdx       Track glossary (created when first needed)
 learn/<track>/                  Private teaching state (MISSION.md, NOTES.md, learning-records/), not published
 src/components/lesson/          Lesson components + lesson.module.css
 src/theme/MDXComponents.tsx     Makes every lesson component global in MDX (export *)
-src/css/custom.css              Theme tokens for light and dark mode (--sl-*)
+src/components/FocusMode/       Focus mode (F / Esc): store, controller, navbar toggle
+src/theme/Root.tsx              Mounts site-wide behaviour (the focus mode controller)
+src/theme/NavbarItem/ComponentTypes.tsx  Custom navbar item types ('custom-focusToggle')
+src/css/custom.css              Theme tokens for light and dark mode (--sl-*), typography, focus mode rules
 src/pages/index.tsx             Home page; PATHS lists the tracks
 sidebars.ts                     One sidebar per track, in teaching order
 scripts/check-mdx.mjs           MDX lint: compiles, known components, relative links, no em/en dashes
@@ -42,6 +45,7 @@ scripts/check-mdx.mjs           MDX lint: compiles, known components, relative l
 - **Placement rule:** study aids specific to one topic (its quiz, interview Q&A, key terms) go inside that lesson. Track-wide aids (Recap in 30 min, Interview Q&A, Quiz bank, Glossary) live on the track's overview page or are linked from it.
 - **No PII in any file.** The repo is public, including `learn/`. Never write the owner's full name, email, employer, handle, location, local file paths or other identifying details into notes, lessons, learning records or code comments. Refer to them as "the owner" or "the learner". Keep background to what teaching needs (e.g. "strong in React"). The GitHub handle appears only where deployment requires it (`docusaurus.config.ts`, `Readme.md`, this file's site URL).
 - **Light and dark mode must both work.** Style with the `--sl-*` tokens in `src/css/custom.css`, never hard-coded colors.
+- **Docusaurus CSS lives in cascade layers** (the `future.v4` flag), so its `!important` rules beat any `!important` in `custom.css`. Override with a different property instead (for example `min-width` against a capped `max-width`), or style a neighbouring element.
 
 ## Content style
 

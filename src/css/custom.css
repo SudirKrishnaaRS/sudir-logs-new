@@ -41,7 +41,9 @@
   /* Infima mapping */
   --ifm-font-family-base: 'DM Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
   --ifm-heading-font-family: var(--ifm-font-family-base);
-  --ifm-font-family-monospace: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --ifm-font-family-monospace: 'Geist Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --sl-font-hand: 'Caveat', 'Segoe Print', 'Bradley Hand', cursive;
+  --sl-measure: 46rem; /* reading column: ~75 characters of body text */
   --ifm-background-color: var(--sl-bg);
   --ifm-background-surface-color: var(--sl-bg);
   --ifm-font-color-base: var(--sl-ink);
@@ -134,19 +136,72 @@ body { -webkit-font-smoothing: antialiased; }
   box-shadow: inset 2px 0 0 var(--sl-gold);
 }
 
+/* ---------- Wordmark: handwritten, like a margin note ---------- */
+
+.navbar__brand { gap: 0.1rem; }
+.navbar__logo { height: 1.9rem; margin-right: 0.45rem; }
+.navbar__title {
+  font-family: var(--sl-font-hand);
+  font-size: 1.85rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  color: var(--sl-gold-ink);
+  transform: translateY(1px) rotate(-1.5deg);
+}
+
+/* ---------- Reading typography ---------- */
+
+.theme-doc-markdown { max-width: var(--sl-measure); }
+
 .markdown {
   color: var(--sl-ink-body);
-  font-size: 1.02rem;
-  line-height: 1.7;
+  font-size: 1.0625rem;
+  line-height: 1.72;
+  font-optical-sizing: auto;
 }
 .markdown h1, .markdown h2, .markdown h3, .markdown strong { color: var(--sl-ink); }
-.markdown h1 { font-size: 2.2rem; letter-spacing: -0.02em; }
+.markdown h1, .markdown h2, .markdown h3 { text-wrap: balance; }
+.markdown p, .markdown li, .markdown dd { text-wrap: pretty; }
+.markdown strong { font-weight: 650; }
+
+.markdown h1 {
+  font-size: clamp(1.9rem, 1.35rem + 1.6vw, 2.5rem);
+  line-height: 1.12;
+  letter-spacing: -0.028em;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
 .markdown h2 {
-  font-size: 1.35rem;
-  letter-spacing: -0.01em;
-  margin-top: 2.6rem;
-  padding-top: 1rem;
+  font-size: 1.45rem;
+  line-height: 1.3;
+  letter-spacing: -0.015em;
+  margin-top: 3rem;
+  margin-bottom: 0.9rem;
+  padding-top: 1.4rem;
   border-top: 1px solid var(--sl-line);
+}
+.markdown h3 {
+  font-size: 1.12rem;
+  letter-spacing: -0.01em;
+  margin-top: 2rem;
+  margin-bottom: 0.6rem;
+}
+.markdown > p, .markdown > ul, .markdown > ol { margin-bottom: 1.15rem; }
+.markdown li + li { margin-top: 0.35rem; }
+.markdown li::marker { color: var(--sl-ink-faint); }
+.markdown hr { margin: 2.5rem 0; }
+
+::selection { background: color-mix(in srgb, var(--sl-gold) 35%, transparent); }
+
+/* Quieter sidebar and table of contents so the lesson leads */
+.menu { font-size: 0.93rem; }
+.table-of-contents { font-size: 0.82rem; }
+.table-of-contents__link:hover, .table-of-contents__link--active { color: var(--sl-gold-ink); }
+
+@media (max-width: 996px) {
+  .markdown { font-size: 1rem; line-height: 1.68; }
+  .navbar__title { font-size: 1.65rem; }
 }
 
 .markdown a { text-underline-offset: 2px; }
@@ -187,4 +242,35 @@ div[class*='codeBlockTitle'] {
   --docusaurus-details-decoration-color: var(--sl-gold-ink);
   border-radius: var(--sl-radius);
   box-shadow: none;
+}
+
+/* ---------- Focus mode (src/components/FocusMode) ---------- */
+
+html[data-focus='on'] { scroll-padding-top: 1.5rem; }
+html[data-focus='on'] .theme-layout-navbar,
+html[data-focus='on'] .theme-doc-sidebar-container,
+html[data-focus='on'] .theme-doc-breadcrumbs,
+html[data-focus='on'] .theme-doc-toc-mobile,
+html[data-focus='on'] .theme-layout-footer,
+html[data-focus='on'] .col--3:has(> .theme-doc-toc-desktop) {
+  display: none !important;
+}
+/* Docusaurus caps these with layered !important rules, which can't be overridden;
+   min-width beats max-width, and padding goes on an element it doesn't style. */
+html[data-focus='on'] main[class*='docMainContainer'] { max-width: 100%; padding-top: 2.5rem; }
+html[data-focus='on'] [class*='docItemCol'] { flex: 0 0 100%; min-width: 100%; }
+html[data-focus='on'] .theme-doc-markdown,
+html[data-focus='on'] .pagination-nav {
+  max-width: var(--sl-measure);
+  margin-inline: auto;
+}
+html[data-focus='on'] article > footer { max-width: var(--sl-measure); margin-inline: auto; }
+
+/* Sections already scrolled past fade back; hover brings one back */
+.theme-doc-markdown > * { transition: opacity 0.35s ease; }
+html[data-focus='on'] [data-sl-past] { opacity: 0.32; }
+html[data-focus='on'] [data-sl-past]:hover { opacity: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-doc-markdown > * { transition: none; }
 }

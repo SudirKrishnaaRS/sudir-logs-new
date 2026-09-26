@@ -7,7 +7,7 @@ import type * as Preset from '@docusaurus/preset-classic';
 const config: Config = {
   title: 'Sudir Logs',
   tagline: 'Structured 0 to hero notes, one tech stack at a time',
-  favicon: 'img/favicon.ico',
+  favicon: 'img/favicon.svg',
 
   future: {
     v4: true,
@@ -28,7 +28,8 @@ const config: Config = {
   },
 
   stylesheets: [
-    'https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400..700&display=swap',
+    // DM Sans for text, Geist Mono for code and labels, Caveat for the handwritten wordmark
+    'https://fonts.googleapis.com/css2?family=Caveat:wght@500..700&family=DM+Sans:opsz,wght@9..40,400..700&family=Geist+Mono:wght@400..700&display=swap',
   ],
 
   markdown: {
@@ -81,6 +82,7 @@ const config: Config = {
       logo: {
         alt: 'Sudir Logs',
         src: 'img/logo.svg',
+        srcDark: 'img/logo-dark.svg',
       },
       items: [
         {
@@ -91,6 +93,7 @@ const config: Config = {
             {type: 'docSidebar', sidebarId: 'express', label: 'Express + PostgreSQL'},
           ],
         },
+        {type: 'custom-focusToggle', position: 'right'},
         {
           href: 'https://github.com/SudirKrishnaaRS/sudir-logs-new',
           label: 'GitHub',
