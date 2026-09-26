@@ -1,5 +1,7 @@
 import React, {Children, Fragment, useEffect, useState, type ReactNode} from 'react';
 import clsx from 'clsx';
+import {useDoc} from '@docusaurus/plugin-content-docs/client';
+import {progress} from '@site/src/lib/progress';
 import styles from './lesson.module.css';
 
 /*
@@ -16,6 +18,8 @@ export function LessonHeader({
   minutes?: number;
   subtitle?: ReactNode;
 }) {
+  const {metadata} = useDoc();
+  const {completed} = progress.use();
   return (
     <>
       <p className={styles.kicker}>
@@ -26,6 +30,7 @@ export function LessonHeader({
             <span>~{minutes} min</span>
           </>
         ) : null}
+        {completed[metadata.id] ? <span className={styles.donePill}>✓ Completed</span> : null}
       </p>
       {subtitle ? <p className={styles.subtitle}>{subtitle}</p> : null}
     </>

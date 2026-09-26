@@ -1,0 +1,179 @@
+.primaryButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--sl-on-gold);
+  background: var(--sl-gold);
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 0.45rem 1rem;
+  cursor: pointer;
+  text-decoration: none;
+  transition: filter 0.15s, transform 0.05s;
+}
+.primaryButton:hover { color: var(--sl-on-gold); text-decoration: none; filter: brightness(1.06); }
+.primaryButton:active { transform: translateY(1px); }
+.primaryButton:focus-visible { outline: 2px solid var(--sl-gold-ink); outline-offset: 2px; }
+
+.linkButton {
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--sl-ink-muted);
+  background: none;
+  border: none;
+  padding: 0.2rem 0.4rem;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.linkButton:hover { color: var(--sl-ink); }
+
+/* ---- Completion card ---- */
+.complete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  max-width: var(--sl-measure);
+  margin: 2.5rem 0 1rem;
+  padding: 1rem 1.2rem;
+  border: 1px dashed var(--sl-line-strong);
+  border-radius: 12px;
+  background: var(--sl-card);
+}
+.completeDone { border-style: solid; border-color: color-mix(in srgb, var(--sl-ok) 40%, transparent); background: var(--sl-ok-wash); }
+.completeText { display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 600; color: var(--sl-ink); }
+.completeDone .completeText { color: var(--sl-ok); }
+.completeIcon {
+  display: inline-grid;
+  place-items: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  border-radius: 50%;
+  background: var(--sl-ok);
+  color: var(--sl-card);
+}
+
+/* ---- Progress bar ---- */
+.bar {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--sl-hover);
+  overflow: hidden;
+}
+.barFill {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--sl-gold);
+  transition: width 0.4s ease;
+}
+
+/* ---- Track overview block ---- */
+.track {
+  margin: 0 0 2rem;
+  padding: 1rem 1.2rem 1.1rem;
+  border: 1px solid var(--sl-line-strong);
+  border-radius: 12px;
+  background: var(--sl-card);
+}
+.trackTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.6rem 1rem;
+  margin-bottom: 0.8rem;
+}
+.trackCount { font-size: 0.95rem; color: var(--sl-ink-muted); }
+.trackCount strong { color: var(--sl-ink); font-size: 1.05rem; }
+
+/* ---- Home continue card ---- */
+.continueCard {
+  position: relative;
+  display: grid;
+  gap: 0.2rem;
+  margin: 0 0 2.5rem;
+  padding: 1rem 3.2rem 1rem 1.25rem;
+  border: 1px solid var(--sl-gold-line);
+  border-radius: 12px;
+  background: var(--sl-gold-wash);
+  color: var(--sl-ink);
+  text-decoration: none;
+  transition: border-color 0.15s, transform 0.15s;
+}
+.continueCard:hover { color: var(--sl-ink); text-decoration: none; border-color: var(--sl-gold); transform: translateY(-1px); }
+.continueLabel {
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sl-gold-ink);
+}
+.continueTitle { font-size: 1.15rem; font-weight: 700; }
+.continueMeta { font-size: 0.88rem; color: var(--sl-ink-muted); }
+.continueArrow {
+  position: absolute;
+  right: 1.2rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.3rem;
+  color: var(--sl-gold-ink);
+}
+
+/* ---- Sidebar course progress ---- */
+.course {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0 0 0.6rem;
+  padding: 0.7rem 0.8rem 0.65rem;
+  border: 1px solid var(--sl-line-strong);
+  border-radius: 10px;
+  background: var(--sl-card);
+  color: var(--sl-ink);
+  text-decoration: none;
+  transition: border-color 0.15s;
+}
+.course:hover { color: var(--sl-ink); text-decoration: none; border-color: var(--sl-gold); }
+.courseTop { display: flex; align-items: baseline; justify-content: space-between; }
+.courseLabel {
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.64rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sl-gold-ink);
+}
+.coursePct { font-family: var(--ifm-font-family-monospace); font-size: 0.8rem; font-weight: 700; }
+.courseCount { font-size: 0.76rem; color: var(--sl-ink-muted); }
+
+/* ---- Manage progress (export / import / reset) ---- */
+.manage {
+  margin-top: 0.9rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid var(--sl-line);
+}
+.manageActions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.ghostButton {
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--sl-ink-muted);
+  background: transparent;
+  border: 1px solid var(--sl-line-strong);
+  border-radius: 999px;
+  padding: 0.3rem 0.8rem;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.ghostButton:hover { color: var(--sl-ink); border-color: var(--sl-gold); background: var(--sl-gold-wash); }
+.ghostButton:focus-visible { outline: 2px solid var(--sl-gold); outline-offset: 2px; }
+.dangerButton { margin-left: auto; }
+.dangerButton:hover { color: var(--sl-danger); border-color: var(--sl-danger); background: var(--sl-danger-wash); }
+@media (max-width: 560px) { .dangerButton { margin-left: 0; } }
+.manageStatus { margin: 0.6rem 0 0; font-size: 0.8rem; color: var(--sl-ink-muted); }
+.manageError { color: var(--sl-danger); }

@@ -1,8 +1,12 @@
 import ComponentTypes from '@theme-original/NavbarItem/ComponentTypes';
-import FocusToggleNavbarItem from '@site/src/components/FocusMode/NavbarItem';
+import LearningPaths from '@site/src/components/NavbarTools/LearningPaths';
+import PomodoroChip from '@site/src/components/NavbarTools/Pomodoro';
+import ReadingOptions from '@site/src/components/NavbarTools/ReadingOptions';
 
-// Adds custom navbar item types, used from docusaurus.config.ts.
+// Custom navbar item types, used from docusaurus.config.ts.
 export default {
   ...ComponentTypes,
-  'custom-focusToggle': FocusToggleNavbarItem,
+  'custom-learningPaths': LearningPaths,
+  'custom-pomodoro': PomodoroChip,
+  'custom-readingOptions': ReadingOptions,
 };

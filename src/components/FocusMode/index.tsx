@@ -2,12 +2,15 @@ import React, {useEffect} from 'react';
 import {useLocation} from '@docusaurus/router';
 import {useActiveDocContext} from '@docusaurus/plugin-content-docs/client';
 import {setFocused, toggleFocused, useFocused} from './store';
+import PomodoroChip from '@site/src/components/NavbarTools/Pomodoro';
+import {timer} from '@site/src/lib/pomodoro';
 import styles from './styles.module.css';
 
 /*
  * Focus mode for doc pages. Hides the site chrome (via html[data-focus] rules in
  * src/css/custom.css), centres the lesson, and fades sections already scrolled past.
- * Toggle: F key or the navbar button. Exit: Esc or the floating button.
+ * Toggle: F key or Reading options in the navbar. Exit: Esc or the floating button.
+ * The navbar is hidden here, so a running focus timer is shown next to the exit button.
  */
 
 function isTypingTarget(el: EventTarget | null) {
@@ -46,6 +49,7 @@ export default function FocusController() {
   const isDoc = useIsDocPage();
   const {pathname} = useLocation();
   const active = focused && isDoc;
+  const t = timer.use();
 
   // Keyboard: F toggles, Esc exits.
   useEffect(() => {
@@ -97,8 +101,11 @@ export default function FocusController() {
 
   if (!active) return null;
   return (
-    <button type="button" className={styles.exit} onClick={() => setFocused(false)}>
-      Exit focus <kbd className={styles.kbd}>Esc</kbd>
-    </button>
+    <div className={styles.corner}>
+      {t.status !== 'idle' ? <PomodoroChip compact /> : null}
+      <button type="button" className={styles.exit} onClick={() => setFocused(false)}>
+        Exit focus <kbd className={styles.kbd}>Esc</kbd>
+      </button>
+    </div>
   );
 }

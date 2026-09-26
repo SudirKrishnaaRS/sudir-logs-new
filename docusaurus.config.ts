@@ -85,19 +85,17 @@ const config: Config = {
         srcDark: 'img/logo-dark.svg',
       },
       items: [
-        {
-          type: 'dropdown',
-          label: 'Learning Paths',
-          position: 'left',
-          items: [
-            {type: 'docSidebar', sidebarId: 'express', label: 'Express + PostgreSQL'},
-          ],
-        },
-        {type: 'custom-focusToggle', position: 'right'},
+        // Tracks come from src/lib/tracks.ts
+        {type: 'custom-learningPaths', position: 'left'},
+        // Right side, in order: search icon, focus timer, reading options, GitHub icon (+ theme toggle)
+        {type: 'search', position: 'right'},
+        {type: 'custom-pomodoro', position: 'right'},
+        {type: 'custom-readingOptions', position: 'right'},
         {
           href: 'https://github.com/SudirKrishnaaRS/sudir-logs-new',
-          label: 'GitHub',
           position: 'right',
+          className: 'sl-github-link',
+          'aria-label': 'GitHub repository',
         },
       ],
     },

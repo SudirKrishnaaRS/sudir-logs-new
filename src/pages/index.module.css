@@ -1,5 +1,6 @@
 .main {
   max-width: 880px;
+  width: 100%;
   margin: 0 auto;
   padding: 4.5rem 1rem 5rem;
 }
@@ -83,3 +84,14 @@ a.card:hover {
   white-space: nowrap;
 }
 .cardBlurb { font-size: 0.93rem; color: var(--sl-ink-muted); margin: 0; }
+
+.cardBar { margin-top: 0.9rem; }
+
+/* Wider screens get a wider home page and bigger cards */
+@media (min-width: 1440px) {
+  .main { max-width: 1040px; }
+}
+@media (min-width: 1800px) {
+  .main { max-width: 1200px; padding-top: 6rem; }
+  .grid { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
+}

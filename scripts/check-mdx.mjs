@@ -11,7 +11,7 @@ const KNOWN = new Set([
   // src/components/lesson
   'LessonHeader', 'Callout', 'Flow', 'Step', 'Quiz', 'Note', 'AskBox', 'Terms', 'Term',
   'CheatGrid', 'CheatCard', 'JoinVenn', 'UrlAnatomy', 'UrlLegend', 'LoopDiagram',
-  'FileTree', 'FileNote', 'Checklist', 'Check', 'Badge',
+  'FileTree', 'FileNote', 'Checklist', 'Check', 'Badge', 'TrackProgress',
   // plain HTML that MDX renders fine
   'details', 'summary', 'code', 'br', 'small', 'strong', 'em', 'kbd', 'sup', 'sub',
 ]);

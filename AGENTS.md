@@ -28,9 +28,15 @@ docs/<track>/glossary.mdx       Track glossary (created when first needed)
 learn/<track>/                  Private teaching state (MISSION.md, NOTES.md, learning-records/), not published
 src/components/lesson/          Lesson components + lesson.module.css
 src/theme/MDXComponents.tsx     Makes every lesson component global in MDX (export *)
-src/components/FocusMode/       Focus mode (F / Esc): store, controller, navbar toggle
-src/theme/Root.tsx              Mounts site-wide behaviour (the focus mode controller)
-src/theme/NavbarItem/ComponentTypes.tsx  Custom navbar item types ('custom-focusToggle')
+src/components/FocusMode/       Focus mode (F / Esc): store and controller
+src/components/NavbarTools/     Navbar "Learning Paths" menu, Pomodoro chip and "Reading options" menu (focus, text size, timer length)
+src/components/Progress/        Mark complete, progress bars, "continue where you left off"
+src/lib/                        Browser-only state (store.ts helper, progress, prefs, pomodoro) and tracks.ts
+src/theme/Root.tsx              Mounts site-wide behaviour (focus mode, timer, text size)
+src/theme/NavbarItem/ComponentTypes.tsx  Custom navbar item types ('custom-pomodoro', 'custom-readingOptions')
+src/theme/DocItem/Footer/       Adds the completion card + visit tracking to lesson pages
+src/theme/DocSidebarItem/Link/  Adds the completed check mark to sidebar links
+src/theme/DocSidebarItems/      Puts the course progress card at the top of the sidebar (desktop and mobile drawer)
 src/css/custom.css              Theme tokens for light and dark mode (--sl-*), typography, focus mode rules
 src/pages/index.tsx             Home page; PATHS lists the tracks
 sidebars.ts                     One sidebar per track, in teaching order
@@ -123,7 +129,7 @@ Work out which track the request belongs to (`express`, `nextjs`, ...). If it is
 1. Write `learn/<track>/MISSION.md` (from the mission interview) and `learn/<track>/NOTES.md`.
 2. Create `docs/<track>/index.mdx` with `slug: /<track>`, following the structure of `docs/express/index.mdx`.
 3. Create `docs/<track>/resources.mdx`.
-4. Register the track in three places:
+4. Register the track:
    - a sidebar key in `sidebars.ts`
-   - a `docSidebar` item in the "Learning Paths" navbar dropdown in `docusaurus.config.ts`
-   - a card in `PATHS` in `src/pages/index.tsx`
+   - an entry in `TRACKS` in `src/lib/tracks.ts` (navbar "Learning Paths" menu, home page card and progress labels)
+   - `<TrackProgress track="<track>" />` under the overview's header
