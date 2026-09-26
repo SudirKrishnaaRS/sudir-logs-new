@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "sudir-logs",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "start", "--", "--no-open", "--port", "3000"],
+      "port": 3000
+    }
+  ]
+}

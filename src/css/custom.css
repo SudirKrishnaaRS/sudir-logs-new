@@ -1,0 +1,186 @@
+/*
+ * Sudir Logs theme. Palette follows aihero.dev: near-black / off-white
+ * neutrals, a single gold accent, DM Sans, soft translucent borders.
+ * Every token has a light and a dark value; components below only use tokens.
+ */
+
+:root {
+  /* Neutrals */
+  --sl-page: #f1f2f5;
+  --sl-bg: #fbfbfc;
+  --sl-card: #ffffff;
+  --sl-ink: #14161a;
+  --sl-ink-body: #14161acc;
+  --sl-ink-muted: #14161a9e;
+  --sl-ink-faint: #14161a59;
+  --sl-line: #14161a1a;
+  --sl-line-strong: #14161a24;
+  --sl-hover: #14161a0f;
+
+  /* Accent: gold fill everywhere, darker gold for text on light backgrounds */
+  --sl-gold: #f5c451;
+  --sl-gold-ink: #8a5c00;
+  --sl-gold-wash: #f5c4512e;
+  --sl-gold-line: #c9950f66;
+  --sl-on-gold: #191510;
+
+  /* Semantic */
+  --sl-ok: #00884c;
+  --sl-ok-wash: #00884c14;
+  --sl-info: #1479b0;
+  --sl-info-wash: #1479b014;
+  --sl-danger: #c92f33;
+  --sl-danger-wash: #c92f3314;
+  --sl-warn: #ac7300;
+  --sl-warn-wash: #ac730014;
+
+  --sl-code-bg: #100f0e;
+  --sl-radius: 9px;
+  --sl-shadow: 0 1px 2px #14161a0d, 0 8px 24px #14161a0a;
+
+  /* Infima mapping */
+  --ifm-font-family-base: 'DM Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --ifm-heading-font-family: var(--ifm-font-family-base);
+  --ifm-font-family-monospace: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --ifm-background-color: var(--sl-bg);
+  --ifm-background-surface-color: var(--sl-bg);
+  --ifm-font-color-base: var(--sl-ink);
+  --ifm-heading-color: var(--sl-ink);
+  --ifm-color-emphasis-300: var(--sl-line-strong);
+  --ifm-toc-border-color: var(--sl-line);
+  --ifm-hr-background-color: var(--sl-line);
+  --ifm-table-border-color: var(--sl-line-strong);
+  --ifm-global-radius: var(--sl-radius);
+  --ifm-code-border-radius: 6px;
+  --ifm-code-font-size: 88%;
+  --ifm-navbar-background-color: color-mix(in srgb, var(--sl-bg) 88%, transparent);
+  --ifm-footer-background-color: var(--sl-page);
+  --ifm-menu-color-background-active: var(--sl-hover);
+  --ifm-menu-color-background-hover: var(--sl-hover);
+
+  --ifm-color-primary: #8a5c00;
+  --ifm-color-primary-dark: #7c5300;
+  --ifm-color-primary-darker: #754e00;
+  --ifm-color-primary-darkest: #614000;
+  --ifm-color-primary-light: #986500;
+  --ifm-color-primary-lighter: #9f6a00;
+  --ifm-color-primary-lightest: #b37800;
+
+  --docusaurus-highlighted-code-line-bg: #f5c45124;
+}
+
+[data-theme='dark'] {
+  --sl-page: #080808;
+  --sl-bg: #0b0b0b;
+  --sl-card: #100f0e;
+  --sl-ink: #f4f3f1;
+  --sl-ink-body: #f4f3f1b8;
+  --sl-ink-muted: #f4f3f199;
+  --sl-ink-faint: #f4f3f14d;
+  --sl-line: #ffffff14;
+  --sl-line-strong: #ffffff1f;
+  --sl-hover: #ffffff12;
+
+  --sl-gold-ink: #f5c451;
+  --sl-gold-wash: #f5c45112;
+  --sl-gold-line: #f5c45159;
+
+  --sl-ok: #5ec386;
+  --sl-ok-wash: #5ec38614;
+  --sl-info: #65b4e9;
+  --sl-info-wash: #65b4e914;
+  --sl-danger: #ea6a64;
+  --sl-danger-wash: #ea6a6414;
+  --sl-warn: #e3ad4b;
+  --sl-warn-wash: #e3ad4b14;
+
+  --sl-code-bg: #100f0e;
+  --sl-shadow: 0 1px 2px #0000004d, 0 8px 24px #00000059;
+
+  --ifm-background-color: var(--sl-page);
+  --ifm-background-surface-color: var(--sl-page);
+  --ifm-navbar-background-color: color-mix(in srgb, var(--sl-page) 85%, transparent);
+  --ifm-footer-background-color: var(--sl-page);
+
+  --ifm-color-primary: #f5c451;
+  --ifm-color-primary-dark: #f3b92f;
+  --ifm-color-primary-darker: #f2b41e;
+  --ifm-color-primary-darkest: #d9990c;
+  --ifm-color-primary-light: #f7cf73;
+  --ifm-color-primary-lighter: #f8d484;
+  --ifm-color-primary-lightest: #fae3b3;
+
+  --docusaurus-highlighted-code-line-bg: #f5c4511f;
+}
+
+/* ---------- Site chrome ---------- */
+
+body { -webkit-font-smoothing: antialiased; }
+
+.navbar {
+  backdrop-filter: saturate(160%) blur(10px);
+  border-bottom: 1px solid var(--sl-line);
+  box-shadow: none;
+}
+
+.footer {
+  border-top: 1px solid var(--sl-line);
+  color: var(--sl-ink-muted);
+}
+
+.menu__link--active:not(.menu__link--sublist) {
+  color: var(--sl-ink);
+  font-weight: 600;
+  box-shadow: inset 2px 0 0 var(--sl-gold);
+}
+
+.markdown {
+  color: var(--sl-ink-body);
+  font-size: 1.02rem;
+  line-height: 1.7;
+}
+.markdown h1, .markdown h2, .markdown h3, .markdown strong { color: var(--sl-ink); }
+.markdown h1 { font-size: 2.2rem; letter-spacing: -0.02em; }
+.markdown h2 {
+  font-size: 1.35rem;
+  letter-spacing: -0.01em;
+  margin-top: 2.6rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--sl-line);
+}
+
+.markdown a { text-underline-offset: 2px; }
+
+/* Inline code: quiet pill, readable in both modes */
+.markdown :not(pre) > code {
+  background: var(--sl-hover);
+  border: 1px solid var(--sl-line);
+  color: var(--sl-ink);
+  padding: 0.1em 0.35em;
+}
+
+/* Code blocks: same dark editor surface in both modes */
+.theme-code-block {
+  border: 1px solid var(--sl-line-strong);
+  box-shadow: var(--sl-shadow);
+}
+div[class*='codeBlockTitle'] {
+  background: #1a1917 !important;
+  color: #f4f3f199 !important;
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.75rem;
+  border-bottom: 1px solid #ffffff14 !important;
+}
+
+.markdown table { display: table; width: 100%; font-size: 0.95rem; }
+.markdown table thead tr { background: var(--sl-hover); }
+.markdown table tr:nth-child(2n) { background: transparent; }
+
+/* details / summary, used for interview Q&A */
+.markdown details {
+  --ifm-alert-background-color: var(--sl-card);
+  --ifm-alert-border-color: var(--sl-line-strong);
+  --docusaurus-details-decoration-color: var(--sl-gold-ink);
+  border-radius: var(--sl-radius);
+  box-shadow: none;
+}

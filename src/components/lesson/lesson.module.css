@@ -1,0 +1,160 @@
+/* Shared styles for lesson building blocks. Tokens come from src/css/custom.css. */
+
+/* ---- LessonHeader ---- */
+.kicker {
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sl-gold-ink);
+  margin: 0 0 0.6rem;
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+.kickerDot { color: var(--sl-ink-faint); }
+.subtitle {
+  font-size: 1.12rem;
+  color: var(--sl-ink-muted);
+  margin: -0.4rem 0 1.8rem;
+}
+
+/* ---- Callout ---- */
+.callout {
+  border: 1px solid var(--sl-line-strong);
+  border-left-width: 3px;
+  border-radius: var(--sl-radius);
+  padding: 0.9rem 1.1rem;
+  margin: 1.4rem 0;
+  background: var(--sl-card);
+  font-size: 0.96rem;
+}
+.callout > :last-child { margin-bottom: 0; }
+.calloutTitle {
+  display: block;
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 0.35rem;
+}
+.react { border-left-color: var(--sl-ok); background: var(--sl-ok-wash); }
+.react .calloutTitle { color: var(--sl-ok); }
+.warn { border-left-color: var(--sl-warn); background: var(--sl-warn-wash); }
+.warn .calloutTitle { color: var(--sl-warn); }
+.info { border-left-color: var(--sl-info); background: var(--sl-info-wash); }
+.info .calloutTitle { color: var(--sl-info); }
+.key { border-left-color: var(--sl-gold); background: var(--sl-gold-wash); }
+.key .calloutTitle { color: var(--sl-gold-ink); }
+
+/* ---- Flow ---- */
+.flow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 1.6rem 0;
+  padding: 1rem;
+  background: var(--sl-card);
+  border: 1px solid var(--sl-line);
+  border-radius: 12px;
+  box-shadow: var(--sl-shadow);
+}
+.step {
+  flex: 1 1 auto;
+  min-width: 110px;
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.55rem 0.8rem;
+  border-radius: 8px;
+  border: 1px solid var(--sl-line-strong);
+  background: var(--sl-hover);
+  color: var(--sl-ink);
+}
+.stepClient { border-color: var(--sl-gold-line); background: var(--sl-gold-wash); color: var(--sl-gold-ink); }
+.stepWarn { border-color: color-mix(in srgb, var(--sl-warn) 40%, transparent); background: var(--sl-warn-wash); color: var(--sl-warn); }
+.stepError { border-color: color-mix(in srgb, var(--sl-danger) 40%, transparent); background: var(--sl-danger-wash); color: var(--sl-danger); }
+.arrow { color: var(--sl-ink-faint); flex: 0 0 auto; }
+
+/* ---- Quiz ---- */
+.quiz {
+  background: var(--sl-card);
+  border: 1px solid var(--sl-line-strong);
+  border-radius: 12px;
+  padding: 1.1rem 1.25rem 1rem;
+  margin: 1.4rem 0;
+  box-shadow: var(--sl-shadow);
+}
+.quizLabel {
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sl-ink-faint);
+  margin-bottom: 0.5rem;
+}
+.quizQuestion { font-weight: 600; color: var(--sl-ink); margin-bottom: 0.85rem; }
+.quizQuestion > :last-child { margin-bottom: 0; }
+.quizOptions { display: flex; flex-direction: column; gap: 0.5rem; }
+.option {
+  font: inherit;
+  font-size: 0.94rem;
+  text-align: left;
+  padding: 0.6rem 0.85rem;
+  border-radius: 8px;
+  border: 1px solid var(--sl-line-strong);
+  background: transparent;
+  color: var(--sl-ink);
+  cursor: pointer;
+  transition: border-color 0.12s, background 0.12s;
+}
+.option:hover:not(:disabled) { border-color: var(--sl-gold); background: var(--sl-gold-wash); }
+.option:disabled { cursor: default; }
+.option:focus-visible { outline: 2px solid var(--sl-gold); outline-offset: 2px; }
+.optionCorrect { border-color: var(--sl-ok); background: var(--sl-ok-wash); color: var(--sl-ok); font-weight: 600; }
+.optionWrong { border-color: var(--sl-danger); background: var(--sl-danger-wash); color: var(--sl-danger); }
+.feedback { min-height: 1.4em; margin-top: 0.7rem; font-size: 0.9rem; }
+.feedbackCorrect { color: var(--sl-ok); }
+.feedbackWrong { color: var(--sl-danger); }
+
+/* ---- Note (source / cross-link box) ---- */
+.note {
+  font-size: 0.93rem;
+  color: var(--sl-ink-muted);
+  border: 1px solid var(--sl-line);
+  border-radius: var(--sl-radius);
+  padding: 0.7rem 1rem;
+  margin: 1.2rem 0;
+}
+.note > :last-child { margin-bottom: 0; }
+
+/* ---- AskBox ---- */
+.ask {
+  font-size: 0.92rem;
+  color: var(--sl-ink-muted);
+  border: 1px dashed var(--sl-line-strong);
+  border-radius: var(--sl-radius);
+  padding: 0.85rem 1rem;
+  margin: 2.2rem 0 0;
+}
+.ask > :last-child { margin-bottom: 0; }
+.ask strong { color: var(--sl-ink); }
+
+/* ---- Terms (topic glossary) ---- */
+.terms {
+  display: grid;
+  grid-template-columns: minmax(120px, max-content) 1fr;
+  gap: 0.5rem 1.2rem;
+  margin: 1.2rem 0;
+  font-size: 0.95rem;
+}
+.terms dt { font-weight: 600; color: var(--sl-ink); }
+.terms dd { margin: 0; }
+@media (max-width: 560px) {
+  .terms { grid-template-columns: 1fr; gap: 0.15rem; }
+  .terms dd { margin-bottom: 0.6rem; }
+}
