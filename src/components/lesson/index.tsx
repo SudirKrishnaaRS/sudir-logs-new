@@ -361,3 +361,43 @@ export function Check({done: initial = false, children}: {done?: boolean; childr
 export function Badge({type = 'planned', children}: {type?: 'done' | 'optional' | 'planned'; children: ReactNode}) {
   return <span className={clsx(styles.badge, styles[`badge-${type}`])}>{children}</span>;
 }
+
+/* ---------- Where code runs ---------- */
+
+type Where = 'server' | 'client' | 'both' | 'build';
+
+const WHERE: Record<Where, {icon: string; label: string}> = {
+  server: {icon: '🖥️', label: 'Runs on the server'},
+  client: {icon: '🌐', label: 'Runs in the browser'},
+  both: {icon: '🔁', label: 'Server first, then the browser'},
+  build: {icon: '🏗️', label: 'Runs at build time'},
+};
+
+/** Pill that says where the next code block runs: <RunsOn where="server" />. Optional children add a short note. */
+export function RunsOn({where, children}: {where: Where; children?: ReactNode}) {
+  const {icon, label} = WHERE[where];
+  return (
+    <p className={clsx(styles.runsOn, styles[`runsOn-${where}`])}>
+      <span className={styles.runsOnPill}>
+        <span aria-hidden>{icon}</span> {label}
+      </span>
+      {children ? <span className={styles.runsOnNote}>{children}</span> : null}
+    </p>
+  );
+}
+
+/* ---------- Side-by-side comparison ---------- */
+
+/** Two (or more) columns that stack on phones: <Compare><Side title="React">...</Side><Side title="Next.js" tone="new">...</Side></Compare> */
+export function Compare({children}: {children: ReactNode}) {
+  return <div className={styles.compare}>{children}</div>;
+}
+
+export function Side({title, tone = 'old', children}: {title: ReactNode; tone?: 'old' | 'new' | 'bad' | 'good'; children: ReactNode}) {
+  return (
+    <div className={clsx(styles.side, styles[`side-${tone}`])}>
+      <span className={styles.sideTitle}>{title}</span>
+      {children}
+    </div>
+  );
+}

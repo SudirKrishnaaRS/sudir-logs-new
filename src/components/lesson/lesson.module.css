@@ -340,3 +340,62 @@
 .badge-optional { color: var(--sl-info); border-color: color-mix(in srgb, var(--sl-info) 40%, transparent); background: var(--sl-info-wash); }
 .badge-planned { color: var(--sl-ink-muted); }
 .step small { display: block; font-weight: 400; font-size: 0.76rem; margin-top: 0.15rem; opacity: 0.85; }
+
+/* ---- RunsOn ---- */
+.runsOn {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.6rem;
+  margin: 1.1rem 0 -0.4rem;
+  font-size: 0.8rem;
+}
+.runsOnPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-weight: 700;
+  padding: 0.18rem 0.65rem;
+  border-radius: 999px;
+  border: 1px solid var(--sl-line-strong);
+  background: var(--sl-hover);
+  color: var(--sl-ink);
+}
+.runsOnNote { color: var(--sl-ink-muted); }
+.runsOn-server .runsOnPill { color: var(--sl-info); border-color: color-mix(in srgb, var(--sl-info) 40%, transparent); background: var(--sl-info-wash); }
+.runsOn-client .runsOnPill { color: var(--sl-gold-ink); border-color: var(--sl-gold-line); background: var(--sl-gold-wash); }
+.runsOn-both .runsOnPill { color: var(--sl-ok); border-color: color-mix(in srgb, var(--sl-ok) 40%, transparent); background: var(--sl-ok-wash); }
+
+/* ---- Compare / Side ---- */
+.compare {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: 0.75rem;
+  margin: 1.4rem 0;
+}
+.side {
+  min-width: 0; /* let code blocks scroll inside the column instead of widening the page */
+  background: var(--sl-card);
+  border: 1px solid var(--sl-line-strong);
+  border-top: 3px solid var(--sl-ink-faint);
+  border-radius: 10px;
+  padding: 0.85rem 0.95rem 0.2rem;
+  box-shadow: var(--sl-shadow);
+  font-size: 0.92rem;
+}
+.side > :last-child { margin-bottom: 0.75rem; }
+.sideTitle {
+  display: block;
+  font-weight: 800;
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+  color: var(--sl-ink-muted);
+}
+.side-new { border-top-color: var(--sl-gold); }
+.side-new .sideTitle { color: var(--sl-gold-ink); }
+.side-good { border-top-color: var(--sl-ok); }
+.side-good .sideTitle { color: var(--sl-ok); }
+.side-bad { border-top-color: var(--sl-danger); }
+.side-bad .sideTitle { color: var(--sl-danger); }

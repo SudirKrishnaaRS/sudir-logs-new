@@ -100,9 +100,10 @@ export default function LearningPaths({mobile}: {mobile?: boolean}) {
         className={clsx(styles.navButton, open && styles.navButtonOpen)}
         aria-expanded={open}
         aria-controls={panelId}
+        aria-label="Learning Paths"
         onClick={() => setOpen((o) => !o)}>
         <PathsIcon />
-        <span>Learning Paths</span>
+        <span className={styles.pathsLabel}>Learning Paths</span>
         <Chevron open={open} />
       </button>
 

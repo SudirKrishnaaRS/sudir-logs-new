@@ -2,6 +2,7 @@ import React, {useEffect, useState} from 'react';
 import clsx from 'clsx';
 import {chime, finishTimer, formatClock, remainingMs, resetTimer, startOrPause, timer} from '@site/src/lib/pomodoro';
 import {prefs} from '@site/src/lib/prefs';
+import {logFocusSession} from '@site/src/lib/streak';
 import styles from './styles.module.css';
 
 /** Re-renders every second while `active`. */
@@ -28,6 +29,7 @@ export function PomodoroController() {
     const id = window.setTimeout(() => {
       finishTimer();
       chime();
+      logFocusSession(t.totalMs);
     }, ms);
     return () => window.clearTimeout(id);
   }, [t]);

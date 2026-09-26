@@ -214,6 +214,12 @@
 .chevronOpen { color: var(--sl-ink-muted); }
 .chevronOpen { transform: rotate(180deg); }
 @media (prefers-reduced-motion: reduce) { .chevron { transition: none; } }
+/* Phones: just the icon, so the navbar tools fit on one row */
+@media (max-width: 600px) {
+  .paths { margin-left: 0.15rem; }
+  .paths .navButton { padding: 0 0.55rem; }
+  .pathsLabel, .paths .chevron { display: none; }
+}
 
 .panelLeft { left: 0; right: auto; width: min(22rem, calc(100vw - 2rem)); padding: 0.5rem; }
 .panelKicker {
@@ -271,3 +277,32 @@ a.pathRowActive:hover { background: var(--sl-gold-wash); border-color: var(--sl-
   cursor: default;
 }
 .drawerHeading:hover { background: none; color: var(--sl-ink-faint); }
+
+/* ---- Study streak ---- */
+.streak { position: relative; display: inline-flex; margin: 0 0.3rem; }
+.streak .navButton { position: relative; padding: 0 0.65rem 0 0.55rem; gap: 0.3rem; }
+.streak-done { color: var(--sl-gold-ink); border-color: var(--sl-gold-line); background: var(--sl-gold-wash); }
+.streak-risk { color: var(--sl-gold-ink); }
+.streakDot {
+  position: absolute;
+  top: 0.2rem;
+  right: 0.25rem;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--sl-gold);
+}
+.streakHead { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; }
+.streakBig {
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--sl-ink);
+  font-variant-numeric: tabular-nums;
+}
+.streakBig span { font-size: 0.9rem; font-weight: 600; letter-spacing: 0; color: var(--sl-ink-muted); }
+@media (max-width: 600px) {
+  .streak { margin: 0 0.15rem; }
+  .streak .navButton { padding: 0 0.5rem 0 0.4rem; gap: 0.2rem; }
+}

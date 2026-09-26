@@ -64,6 +64,8 @@ const sidebars: SidebarsConfig = {
     },
     'express/resources',
   ],
+  // Lessons and cheatsheets are added here as they're written (see learn/nextjs/NOTES.md for the syllabus).
+  nextjs: ['nextjs/index', 'nextjs/resources'],
 };
 
 export default sidebars;

@@ -20,7 +20,8 @@ export const TRACKS: Track[] = [
   {
     id: 'nextjs',
     title: 'Next.js',
-    blurb: 'Next up.',
+    blurb: 'Routing, Server vs Client Components, API routes, Server Actions, caching, auth. React dev to Next.js dev, one visual lesson a day.',
+    to: '/nextjs',
   },
 ];
 

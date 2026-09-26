@@ -1,5 +1,6 @@
 import {useAllDocsData} from '@docusaurus/plugin-content-docs/client';
 import {createStore} from './store';
+import {logLessonComplete, mergeStreak, streak} from './streak';
 
 /*
  * Lesson completion and "continue where you left off".
@@ -39,6 +40,7 @@ export function setCompleted(id: string, done: boolean) {
     else delete completed[id];
     return {...p, completed};
   });
+  if (done) logLessonComplete();
 }
 
 export function recordVisit(visit: Omit<LastVisit, 'at'>) {
@@ -115,6 +117,7 @@ type ExportFile = {
   exportedAt: string;
   progress: ReturnType<typeof progress.get>;
   prefs?: {textScale?: number; pomodoroMinutes?: number};
+  streak?: ReturnType<typeof streak.get>;
 };
 
 export function buildExport(prefsValue: ExportFile['prefs']): ExportFile {
@@ -124,6 +127,7 @@ export function buildExport(prefsValue: ExportFile['prefs']): ExportFile {
     exportedAt: new Date().toISOString(),
     progress: progress.get(),
     prefs: prefsValue,
+    streak: streak.get(),
   };
 }
 
@@ -162,7 +166,7 @@ export function parseExport(data: unknown): ExportFile {
 
 /**
  * Merges an export into this browser: completed lessons are unioned (earliest date kept),
- * and for "continue" the most recent visit wins. Returns how many lessons were newly completed.
+ * for "continue" the most recent visit wins, and streak days are merged. Returns how many lessons were newly completed.
  */
 export function mergeImport(file: ExportFile): number {
   let added = 0;
@@ -180,5 +184,6 @@ export function mergeImport(file: ExportFile): number {
     }
     return {completed, last: newer(p.last, file.progress.last), lastByTrack};
   });
+  mergeStreak(file.streak);
   return added;
 }
