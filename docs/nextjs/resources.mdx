@@ -1,0 +1,102 @@
+---
+title: Next.js Resources
+sidebar_label: Resources
+slug: resources
+description: Trusted docs, videos and communities the Next.js track is grounded in.
+---
+
+<LessonHeader
+  kicker="Next.js · Resources"
+  subtitle="The high-trust sources every lesson cites, grouped as Knowledge, Video and Wisdom."
+/>
+
+<Note>
+
+**Attribution.** These are personal study notes. All credit for the linked docs, videos and code goes to their original authors and creators. Nothing here is copied or re-hosted: the lessons explain concepts in my own words and with original examples and diagrams, and link back to the sources. Please watch and read the originals to support the people who made them.
+
+</Note>
+
+<Callout type="warn" title="Check the version">
+  This track targets **Next.js 16** (App Router). Next.js changed a lot in versions 15 and 16: middleware became Proxy,
+  `params` became async, and caching moved to `"use cache"`. When a tutorial disagrees with the official docs, trust the docs.
+</Callout>
+
+## Knowledge
+
+### Official Next.js docs (the primary source for every lesson)
+
+- [Next.js - Getting Started (App Router)](https://nextjs.org/docs/app/getting-started)
+  The official path through the core features, in order. Use for: nearly every lesson in Parts 1 and 2.
+- [Next.js - Rendering Philosophy](https://nextjs.org/docs/app/guides/rendering-philosophy)
+  How Next.js treats static and dynamic rendering as a spectrum. Use for: Prerequisite 00a and Lesson 14.
+- [Next.js - Server and Client Boundary](https://nextjs.org/docs/app/guides/server-and-client-boundary)
+  Where Server and Client Components run and how the boundary works. Use for: Prerequisite 00b and Lesson 04.
+- [Next.js - Streaming](https://nextjs.org/docs/app/guides/streaming)
+  Progressive rendering as data arrives. Use for: Lesson 05 (`loading.tsx`, Suspense).
+- [Next.js - Linking and Navigating](https://nextjs.org/docs/app/getting-started/linking-and-navigating) and [`useRouter`](https://nextjs.org/docs/app/api-reference/functions/use-router)
+  How `<Link>`, prefetching and client-side navigation work, and the navigation hooks. Use for: Lessons 02 and 06.
+- [Next.js - `generateStaticParams`](https://nextjs.org/docs/app/api-reference/functions/generate-static-params)
+  Pre-building dynamic routes at build time (SSG in practice). Use for: Lesson 03.
+- [Next.js - Hydration error explained](https://nextjs.org/docs/messages/react-hydration-error)
+  Why server HTML and browser HTML can disagree, and the common fixes. Use for: Prerequisite 00b and Lesson 04.
+- [Next.js - Client-side data fetching](https://nextjs.org/docs/app/guides/client-side-data-fetching)
+  Fetching in Client Components with a library, seeded from a Server Component. Use for: Lesson 06.
+- [Next.js - Lazy Loading](https://nextjs.org/docs/app/guides/lazy-loading) and [`next.config.js` options](https://nextjs.org/docs/app/api-reference/config/next-config-js)
+  `next/dynamic` and the config file you'll find in every project. Use for: Lesson 08.
+- [Next.js - Backend for Frontend](https://nextjs.org/docs/app/guides/backend-for-frontend)
+  Using Next.js as a backend: Route Handlers, proxying, webhooks. Use for: Lesson 10 (API routes).
+- [Next.js - Server Actions](https://nextjs.org/docs/app/guides/server-actions) and [Forms](https://nextjs.org/docs/app/guides/forms)
+  How Server Actions work, their security model, and form patterns. Use for: Lessons 12 and 13.
+- [Next.js - How Revalidation Works](https://nextjs.org/docs/app/guides/how-revalidation-works)
+  Tags, cache consistency and revalidation in depth. Use for: Lesson 14.
+- [Next.js - Authentication](https://nextjs.org/docs/app/guides/authentication) and [Data Security](https://nextjs.org/docs/app/guides/data-security)
+  Sessions, Proxy for optimistic checks, a Data Access Layer for secure checks. Use for: Lesson 15.
+- [Next.js - Environment Variables](https://nextjs.org/docs/app/guides/environment-variables)
+  `.env` files and the `NEXT_PUBLIC_` prefix. Use for: Lessons 11 and 16.
+- [Next.js - Edge Runtime](https://nextjs.org/docs/app/api-reference/edge)
+  What the Edge runtime supports compared with Node.js. Use for: Lesson 15 (Node vs Edge).
+- [Next.js - Building](https://nextjs.org/docs/app/guides/building)
+  What `next build` does and how to read its output. Use for: Lesson 16.
+- [Next.js - Migrating](https://nextjs.org/docs/app/guides/migrating)
+  Includes the Pages Router to App Router migration guide. Use for: Lesson 17 (mapping old code to new).
+
+### Official courses
+
+- [Next.js Learn - the App Router course](https://nextjs.org/learn/dashboard-app)
+  Free, official, 16 chapters, builds a full-stack dashboard. Use for: extra hands-on practice alongside Parts 1 and 2.
+- [Next.js Learn - Pages Router course](https://nextjs.org/learn/pages-router)
+  Builds a static blog with the Pages Router. Use for: Lesson 17, to see the older style in a real project.
+
+### React and the wider stack
+
+- [React docs - Server Components](https://react.dev/reference/rsc/server-components), [`'use client'`](https://react.dev/reference/rsc/use-client) and [`'use server'`](https://react.dev/reference/rsc/use-server)
+  The React-side definitions Next.js builds on. Use for: Lessons 04 and 12.
+- [Prisma - Official Documentation](https://www.prisma.io/docs)
+  Schema, migrations and Prisma Client. Use for: Lesson 11 (you met Prisma in Express Lesson 10).
+- [Zod - Official Documentation](https://zod.dev/)
+  Schema validation, the library the Next.js docs use in their form examples. Use for: Lesson 13.
+- [TanStack Query (React Query) - Overview](https://tanstack.com/query/latest/docs/framework/react/overview)
+  The most common client-side data library in Next.js codebases. Use for: Lesson 06.
+- [MDN - HTTP cookies](https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies)
+  Cookie options like `HttpOnly`, `Secure` and `SameSite`. Use for: Lesson 15.
+
+## Video (English)
+
+- [Codevolution - Next.js 15 Tutorial, Beginner to Advanced (playlist)](https://www.youtube.com/playlist?list=PLC3y8-rFHvwhIEc4I4YsRz5C7GOBnxSJY)
+  Short, one-concept-per-video episodes in the same calm, diagram-first style as the Express track's event loop videos. Built on Next.js 15, so watch for the renames (middleware is now Proxy). Use for: a second explanation of any Part 1 or Part 2 lesson.
+- [Vercel on YouTube](https://www.youtube.com/@VercelHQ)
+  The official channel from the team behind Next.js: release talks and feature explainers. Use for: what's new, straight from the source.
+
+## Wisdom (Communities)
+
+- [Next.js GitHub Discussions](https://github.com/vercel/next.js/discussions)
+  The official Q&A forum, where the Next.js team also answers. Use for: "is this a bug or am I doing it wrong?"
+- [Next.js Discord](https://discord.com/invite/bUG2bvbtHy)
+  The official community server. Use for: quick help once you're building Recipe Streak.
+- [r/nextjs](https://www.reddit.com/r/nextjs)
+  A large, active subreddit. Use for: real-world opinions (hosting, auth libraries, project structure) and what people hit in production.
+
+## Gaps
+
+- A short, diagram-first video on CSR vs SSR vs SSG vs ISR for Prerequisite 00a (to find when writing that lesson).
+- An up-to-date Next.js 16 video course (most free courses still target 15).

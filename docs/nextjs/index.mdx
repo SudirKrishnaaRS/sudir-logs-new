@@ -1,0 +1,147 @@
+---
+title: Next.js
+sidebar_label: Overview
+slug: /nextjs
+description: From React developer to confident Next.js developer in about 3 weeks, one short visual lesson a day.
+---
+
+<LessonHeader
+  kicker="Learning path · Full-stack · ~3 weeks at ~1 hour/day"
+  subtitle="The 80/20 of daily Next.js work, mapped to the React (and Express) you already know."
+/>
+
+<TrackProgress track="nextjs" />
+
+## Mission
+
+Become a confident Next.js developer: ready for a Next.js interview, and ready to open a production codebase at work and know what every file is doing. Done looks like being able to:
+
+- Explain CSR, SSR, SSG and ISR, and say which one a page is using and why
+- Say what runs on the server and what runs in the browser, and place `"use client"` correctly
+- Build routes with the App Router: pages, layouts, dynamic segments, loading, error and 404 files
+- Fetch data in Server Components and stream the slow parts, and know when to still fetch on the client
+- Use the client-side tools every codebase has: navigation hooks, a providers wrapper, React Query
+- Diagnose and fix a hydration error
+- Write API endpoints with Route Handlers, and know when a Server Action is the better tool
+- Mutate data with Server Actions, with validation, pending states and revalidation
+- Debug "why is my page stale?" with a working model of caching
+- Protect routes with Proxy and cookie sessions
+- Recognise Pages Router code in an older codebase
+- Build and deploy a full-stack app with Postgres
+
+Out of scope for this track: deep Pages Router, automated testing, Docker and self-hosting, advanced routing (parallel and intercepting routes get a short "recognise it" note in Capstone 1).
+
+<Callout type="react" title="The one question behind all of Next.js">
+
+Next.js is React plus a server. Almost every new idea in this track is an answer to one question:
+**"does this code run on the server, or in the browser?"** The two prerequisite lessons build that picture first.
+After that, every feature is a variation on it.
+
+</Callout>
+
+## React → Next.js, concept for concept
+
+| React (you know this) | Next.js equivalent (you're learning this) |
+|---|---|
+| `<Routes>` + `<Route path>` in React Router | Folders and a `page.tsx` inside `app/` |
+| A shared layout component wrapping routes | `layout.tsx`: wraps every page below it |
+| `useParams()` / `useSearchParams()` | The `params` / `searchParams` props |
+| `useNavigate()` / `useLocation()` | `useRouter()` / `usePathname()` |
+| Wrapping `<App />` in context providers | A `providers.tsx` Client Component inside the root layout |
+| `useEffect` + `fetch` + a loading state | `async` Server Component + `loading.tsx` |
+| Error Boundary | `error.tsx` |
+| Every component you've written so far | A Client Component (`"use client"`) |
+| `onSubmit` → `fetch('/api/...')` | A Server Action (`"use server"`) |
+| An Express route (`app.get(...)`) | A Route Handler (`app/api/.../route.ts`) |
+| Express middleware | `proxy.ts` (Next.js calls middleware "Proxy" since v16) |
+| React Query cache invalidation | `revalidatePath()` / `revalidateTag()` |
+
+## The build-along project: Recipe Streak 🍳🔥
+
+<Callout type="key" title="One app, a new feature every lesson">
+
+You'll build **Recipe Streak**, a recipe box with a daily cooking streak. Browse recipes, open a recipe page with a photo,
+add your own, and hit **"I cooked this today"** to keep your streak alive. Every lesson ends with something new working in
+the app, so each day has a visible win.
+
+</Callout>
+
+<Flow label="The three parts of the track">
+  <Step type="client">**Fundamentals**<br />Who builds the HTML, and where code runs</Step>
+  <Step>**Part 1: read any Next.js app**<br />Routing, Server vs Client, data, client-side tools, errors</Step>
+  <Step>**Part 2: full-stack**<br />API routes, database, Server Actions, caching</Step>
+  <Step>**Part 3: ship it**<br />Auth, deploy, old Pages Router code</Step>
+</Flow>
+
+## How every lesson works
+
+| Part of the lesson | Why it's there |
+|---|---|
+| ⏱️ **Warm-up (2 min)**: two recall questions from earlier lessons | Pulling facts back from memory, spaced over days, is what makes them stick |
+| 🎯 **Today's win**: what will work in Recipe Streak by the end | A small, visible goal to aim for |
+| 🖥️ / 🌐 **Server or Browser badge** on the code | Keeps the one big question in view |
+| 🔎 **Spot it in the wild**: what this looks like in a real codebase | For reading the codebase at work |
+| ✅ **Quick check, Interview angle, Key terms** | Practice, interview rehearsal and vocabulary |
+
+## Prerequisites: the fundamentals
+
+The ideas under the features. Short, diagram-first, and worth doing first.
+
+| # | Lesson | Unlocks |
+|---|---|---|
+| 00a | Who builds the HTML? CSR vs SSR vs SSG vs ISR | Every rendering choice in Next.js |
+| 00b | Server vs browser: where code runs, bundles and hydration (and what a hydration error means) | `"use client"` (Lesson 04) and `"use server"` (Lesson 12) |
+
+## Part 1 - Read any Next.js app (the daily 80%)
+
+| # | Lesson | Recipe Streak gets... |
+|---|---|---|
+| 01 | Why Next.js, `create-next-app`, a tour of the project | The app running locally |
+| 02 | File-based routing: `page.tsx`, `layout.tsx`, `<Link>`, prefetching | Home, Recipes and About pages with a shared nav |
+| 03 | Dynamic routes `[slug]`, `params` / `searchParams`, `generateStaticParams` | A pre-built page for every recipe, plus tag filters |
+| 04 | **Server vs Client Components**, `"use client"`, fixing hydration errors ⭐ | A ❤️ favourite button on a server-rendered page |
+| 05 | Fetching data in Server Components, `loading.tsx`, streaming | Recipes loaded on the server, with skeletons while they load |
+| 06 | Client-side Next.js: `useRouter`, `usePathname`, providers, React Query | An active nav link, a search box that updates the URL, and a "Surprise me" button |
+| 07 | Errors and 404s: `error.tsx`, `not-found.tsx`, `redirect()` | A friendly "recipe not found" page |
+| 08 | Styling and built-ins: Tailwind, `next/image`, `next/font`, metadata, `next/dynamic`, `next.config.ts` | Food photos, nice type, and link previews when shared |
+| 09 | 🏁 Capstone 1: finish the read-only app + tour a real open-source codebase | A complete recipe browser |
+
+## Part 2 - Full-stack Next.js
+
+| # | Lesson | Recipe Streak gets... |
+|---|---|---|
+| 10 | **Route Handlers (API routes)**: `route.ts`, `GET` / `POST`, vs Express | A `/api/recipes` JSON endpoint |
+| 11 | Database: Postgres + Prisma, env vars, a server-only data layer | Recipes stored in a real database |
+| 12 | **Server Actions and `"use server"`**: mutations without writing an API | An "Add recipe" form and the "I cooked this today" button |
+| 13 | Forms that feel good: `useActionState`, `useFormStatus`, Zod | Pending spinners and inline validation errors |
+| 14 | Caching and revalidation: static vs dynamic, `"use cache"` | Fast pages that update the moment you add a recipe |
+
+## Part 3 - Ship it
+
+| # | Lesson | Recipe Streak gets... |
+|---|---|---|
+| 15 | Auth: cookie sessions, Proxy, protecting pages and data (plus Node vs Edge runtime) | Sign in, and a streak that's yours alone |
+| 16 | Build and deploy: `next build`, production env vars, Vercel | A live URL you can share |
+| 17 | Pages Router primer: reading `getServerSideProps` and `pages/api` code | (Reading practice for older codebases) |
+| 18 | 🏁 Capstone 2: the full app end to end + interview walkthrough | The finished, deployed Recipe Streak |
+
+<Note>
+
+Lessons are linked here as they're written. Each lesson gets its own cheatsheet, except the two capstones, which lean on the others.
+Every source the lessons cite is collected on the [Resources](./resources.mdx) page.
+
+</Note>
+
+## Whole-track study aids
+
+<Callout type="key" title="Placement rule">
+  Anything specific to one topic (its quiz, interview questions, key terms) lives inside that lesson.
+  The aids below span the whole track, so they live here.
+</Callout>
+
+| Aid | Use it when | Status |
+|---|---|---|
+| Recap in 30 min | Right before an interview, or coming back after months away | <Badge>planned</Badge> |
+| Interview Q&A | Rehearsing answers across the whole track | <Badge>planned</Badge> |
+| Quiz bank | Testing yourself on every lesson's questions, shuffled | <Badge>planned</Badge> |
+| Glossary | Checking a term's meaning | <Badge>planned</Badge> |
