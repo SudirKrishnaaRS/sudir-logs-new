@@ -1,0 +1,81 @@
+---
+title: 'Express Routing, at a Glance'
+sidebar_label: 'Routing'
+slug: routing
+description: Quick reference for HTTP verbs, URL anatomy, dynamic segments, route order and response methods.
+tags: [express, routing, cheatsheet]
+---
+
+<LessonHeader
+  kicker="Express · Cheatsheet"
+  subtitle={<>The compressed version of Lesson 02 - for when you just need to look something up.</>}
+/>
+
+<Note>Full lesson: [Lesson 02 - Routing](../lessons/02-routing.mdx)</Note>
+
+## HTTP verbs
+
+<CheatGrid>
+  <CheatCard tone="info" title="GET" use="Read data, no side effects" ex="app.get('/todos')" />
+  <CheatCard tone="ok" title="POST" use="Create a new record" ex="app.post('/todos')" />
+  <CheatCard tone="warn" title="PUT" use="Replace/update a record" ex="app.put('/todos/:id')" />
+  <CheatCard tone="danger" title="DELETE" use="Remove a record" ex="app.delete('/todos/:id')" />
+</CheatGrid>
+
+## URL anatomy
+
+<UrlAnatomy parts={[['base', '/todos'], ['param', '/7'], ['query', '?sort=asc']]}>
+  <UrlLegend kind="base">Fixed path segment</UrlLegend>
+  <UrlLegend kind="param">Route param → <code>req.params.id</code></UrlLegend>
+  <UrlLegend kind="query">Query string → <code>req.query.sort</code></UrlLegend>
+</UrlAnatomy>
+
+## Dynamic segment patterns
+
+| Pattern | Example request | req.params |
+|---|---|---|
+| `/todos/:id` | `/todos/7` | `{ id: '7' }` |
+| `/users/:userId/todos/:todoId` | `/users/3/todos/9` | `{ userId: '3', todoId: '9' }` |
+| `/todos/:id?` (optional) | `/todos` or `/todos/7` | `{}` or `{ id: '7' }` |
+| `/files/*` (wildcard) | `/files/images/logo.png` | `{ 0: 'images/logo.png' }` |
+
+<Callout type="info" title="Express 5 changed these two">
+  The optional and wildcard rows above are Express 4 syntax. In Express 5, `?` is no longer supported, so write
+  an optional segment in braces: `/todos{/:id}`. A wildcard must be named, as in `/files/*splat`, and
+  `req.params.splat` is an array of segments (`['images', 'logo.png']`), not one string.
+  Source: [Express 5 migration guide](https://expressjs.com/en/guide/migrating-5.html#path-syntax).
+</Callout>
+
+<Callout type="warn" title="Always remember">
+  `req.params` and `req.query` values are always **strings**, even when they
+  look numeric. Convert with `Number(...)` before comparing to a database ID.
+</Callout>
+
+<Callout type="warn" title="Route order">
+  Express matches top to bottom and stops at the first match. Put specific paths (`/todos/new`)
+  **above** dynamic ones (`/todos/:id`), or the dynamic route will swallow them.
+</Callout>
+
+## Sending a response
+
+| Method | What it does |
+|---|---|
+| `res.json(data)` | Sends JSON - use this almost always |
+| `res.send(data)` | Sends a string, Buffer, or object |
+| `res.status(code)` | Sets the status code, chain before `.json()` |
+| `res.end()` | Ends the response with no body |
+
+<CheatGrid>
+  <CheatCard tone="ok" title="200 OK" use="Success, returning data" />
+  <CheatCard tone="ok" title="201 Created" use="Success, new record made" />
+  <CheatCard tone="ok" title="204 No Content" use="Success, nothing to return" />
+  <CheatCard tone="warn" title="400 Bad Request" use="Client sent invalid data" />
+  <CheatCard tone="warn" title="404 Not Found" use="No record at that id" />
+  <CheatCard tone="danger" title="500 Server Error" use="Your code broke, not theirs" />
+</CheatGrid>
+
+<Callout type="warn" title="Default">
+  No `res.status()` call → Express sends **200** automatically.
+</Callout>
+
+<Note>Full list: [MDN - HTTP response status codes](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status).</Note>

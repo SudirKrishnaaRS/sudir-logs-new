@@ -1,0 +1,61 @@
+---
+title: 'Express Middleware, at a Glance'
+sidebar_label: 'Middleware'
+slug: middleware
+description: Quick reference for the middleware signature, registration kinds, ordering rules and the auth-gate pattern.
+tags: [express, middleware, cheatsheet]
+---
+
+<LessonHeader
+  kicker="Express · Cheatsheet"
+  subtitle={<>The compressed version of Lesson 03 - for when you just need to look something up.</>}
+/>
+
+<Note>Full lesson: [Lesson 03 - Middleware](../lessons/03-middleware.mdx)</Note>
+
+## The shape
+
+```js
+function name(req, res, next) {
+  // do something
+  next(); // pass control forward, or...
+  // res.status(code).json({...}); // ...stop here instead
+}
+```
+
+<Flow label="Request passes through middleware 1 and middleware 2 before the route handler">
+  <Step type="client">Request</Step>
+  <Step>middleware 1</Step>
+  <Step>middleware 2</Step>
+  <Step type="client">route handler</Step>
+</Flow>
+
+## Registering it
+
+| Kind | Syntax | Runs for |
+|---|---|---|
+| Application-level | `app.use(fn)` | Every request after this line |
+| Route-level | `app.get(path, fn, handler)` | Only that route |
+| Built-in | `express.json()`, `express.static()` | Whatever it's mounted on |
+| Third-party | `app.use(cors())` | Whatever it's mounted on |
+
+<Callout type="warn" title="Rule #1">
+  Every middleware must call `next()` **or** send a response. Doing neither hangs the request forever.
+</Callout>
+
+<Callout type="warn" title="Rule #2">
+  Order = execution order, same as routing. `app.use(express.json())` must come **before**
+  any route that reads `req.body`.
+</Callout>
+
+## Auth-gate pattern (used again in Lesson 12)
+
+```js
+function requireAuth(req, res, next) {
+  if (!req.headers.authorization) {
+    return res.status(401).json({ error: 'Not logged in' });
+  }
+  next();
+}
+app.get('/todos', requireAuth, handler);
+```

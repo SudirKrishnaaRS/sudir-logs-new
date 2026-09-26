@@ -1,0 +1,283 @@
+---
+title: 'Capstone: The Full, Production-Shaped API'
+sidebar_label: '14 · Capstone: Full API'
+sidebar_position: 14
+slug: capstone-full-api
+description: Postgres, bcrypt + JWT auth, validation and CORS from both weeks assembled into one complete API.
+tags: [express, capstone]
+---
+
+<LessonHeader
+  kicker="Express · Lesson 14 of 14"
+  minutes={25}
+  subtitle={<>Postgres, auth, validation, CORS - everything from both weeks, assembled into one app.</>}
+/>
+
+<Callout type="info" title="No new concepts today">
+  Same deal as Lesson 07: nothing new to learn here. This is where two weeks of pieces become one thing you
+  could actually hand to a React frontend right now.
+</Callout>
+
+## What Week 2 added
+
+| Lesson | What it gave you |
+|---|---|
+| 08 | Real PostgreSQL connection, connection pool, `.env` |
+| 09 | Parameterized queries, avoiding SQL injection |
+| 10 | Prisma as an optional alternative to raw SQL |
+| 11 | bcrypt password hashing, issuing a JWT |
+| 12 | `requireAuth` middleware, `req.user`, protecting routes |
+| 13 | `express-validator`, CORS for your React frontend |
+
+## The complete folder
+
+<FileTree>
+
+- 📁 project-root/
+  - 📄 .env <FileNote>- DATABASE_URL, JWT_SECRET</FileNote>
+  - 📄 index.js
+  - 📁 db/
+    - 📄 pool.js
+  - 📁 middleware/
+    - 📄 requireAuth.js
+  - 📁 routes/
+    - 📄 todos.js
+    - 📄 auth.js
+  - 📁 controllers/
+    - 📄 todoController.js
+    - 📄 authController.js
+  - 📁 models/
+    - 📄 todoModel.js
+    - 📄 userModel.js
+
+</FileTree>
+
+## models/userModel.js
+
+```js title="models/userModel.js"
+const pool = require('../db/pool');
+
+module.exports = {
+  create: async ({ email, password }) => {
+    const result = await pool.query(
+      'INSERT INTO users (email, password) VALUES ($1, $2) RETURNING id, email',
+      [email, password]
+    );
+    return result.rows[0];
+  },
+  findByEmail: async (email) => {
+    const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    return result.rows[0];
+  },
+};
+```
+
+## controllers/authController.js
+
+```js title="controllers/authController.js"
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const userModel = require('../models/userModel');
+
+async function register(req, res, next) {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) return res.status(400).json({ error: 'email and password are required' });
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = await userModel.create({ email, password: hashedPassword });
+    res.status(201).json(user);
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function login(req, res, next) {
+  try {
+    const { email, password } = req.body;
+    const user = await userModel.findByEmail(email);
+    if (!user) return res.status(401).json({ error: 'Invalid credentials' });
+
+    const passwordMatches = await bcrypt.compare(password, user.password);
+    if (!passwordMatches) return res.status(401).json({ error: 'Invalid credentials' });
+
+    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    res.json({ token });
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { register, login };
+```
+
+## routes/auth.js and routes/todos.js
+
+```js title="routes/auth.js"
+// routes/auth.js
+const express = require('express');
+const router = express.Router();
+const authController = require('../controllers/authController');
+
+router.post('/register', authController.register);
+router.post('/login', authController.login);
+module.exports = router;
+```
+
+```js title="routes/todos.js"
+// routes/todos.js
+const express = require('express');
+const { body } = require('express-validator');
+const router = express.Router();
+const requireAuth = require('../middleware/requireAuth');
+const todoController = require('../controllers/todoController');
+
+router.get('/', requireAuth, todoController.getAllTodos);
+router.get('/:id', requireAuth, todoController.getTodoById);
+router.post('/', requireAuth, body('title').notEmpty(), todoController.createTodo);
+router.put('/:id', requireAuth, body('title').notEmpty(), todoController.updateTodo);
+router.delete('/:id', requireAuth, todoController.deleteTodo);
+module.exports = router;
+```
+
+## index.js
+
+```js title="index.js"
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const app = express();
+
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.url}`);
+  next();
+});
+app.use(cors({ origin: 'http://localhost:5173' }));
+app.use(express.json());
+
+app.use('/auth', require('./routes/auth'));
+app.use('/todos', require('./routes/todos'));
+
+app.use((req, res) => res.status(404).json({ error: 'Route not found' }));
+
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: 'Something went wrong' });
+});
+
+app.listen(3000, () => console.log('Server running on http://localhost:3000'));
+```
+
+## Testing checklist
+
+<Checklist>
+  <Check>`POST /auth/register` creates a user, 201, no password hash in the response</Check>
+  <Check>`POST /auth/login` with correct credentials returns a token</Check>
+  <Check>`POST /auth/login` with a wrong password returns 401</Check>
+  <Check>`GET /todos` with no token returns 401</Check>
+  <Check>`GET /todos` with a valid token returns your real Postgres rows</Check>
+  <Check>`POST /todos` with an empty title returns 400 from express-validator</Check>
+  <Check>Restart the server - your todos are still there (real persistence, unlike Week 1's array)</Check>
+  <Check>A React app on a different port can call this API without a CORS error</Check>
+</Checklist>
+
+## Review: mixed check across all 14 lessons
+
+<Quiz
+  label="Review"
+  answer={0}
+  options={['user input becomes SQL', 'it runs noticeably slower', 'Postgres rejects the syntax', 'Express blocks the request']}>
+  Building a query with string concatenation instead of `$1` placeholders is risky because...
+</Quiz>
+
+<Quiz
+  label="Review"
+  answer={0}
+  options={['a one-way bcrypt hash', 'plaintext, for simplicity', 'a reversible encryption', 'a JWT token instead']}>
+  A database should store a user's password as...
+</Quiz>
+
+<Quiz
+  label="Review"
+  answer={0}
+  options={['before the controller function', 'after the controller function', 'inside the model layer', 'only in index.js itself']}>
+  In a route definition, `requireAuth` must be listed...
+</Quiz>
+
+<Quiz
+  label="Review"
+  answer={0}
+  options={['the browser, not Express', 'Express, not the browser', 'PostgreSQL connection limits', 'the JWT signature check']}>
+  A CORS error is enforced by...
+</Quiz>
+
+<Quiz
+  label="Review"
+  answer={0}
+  options={['four function parameters total', 'a special function name', 'being registered with app.get', 'returning a promise object']}>
+  Error-handling middleware is identified by...
+</Quiz>
+
+## Checking against your original mission
+
+Back in [`MISSION.md`](../index.mdx), "done" meant being able to:
+
+<Checklist>
+  <Check done>Explain the request/response lifecycle and where Express fits</Check>
+  <Check done>Build a REST API from scratch - routing, middleware, params/query/body, error handling</Check>
+  <Check done>Structure a project like production codebases (routes/controllers/models)</Check>
+  <Check done>Connect Express to real PostgreSQL, CRUD with parameterized queries</Check>
+  <Check done>Implement authentication - bcrypt + JWT, via middleware</Check>
+  <Check done>Validate requests and configure CORS for a React frontend</Check>
+</Checklist>
+
+That's the mission, done. Everything past here is optional depth, not a gap in what you were aiming for.
+
+## What's next, if you want it
+
+Deliberately out of scope for this course (see [`MISSION.md`](../index.mdx)) but natural next steps once you want them:
+
+- **Automated tests** - Jest or Vitest + Supertest, so you stop testing every endpoint by hand with curl
+- **Docker** - packaging this app + Postgres so it runs identically anywhere
+- **Deployment** - Render, Railway, or Fly.io are the simplest paths for a Node + Postgres app
+- **MongoDB** - if a future job needs NoSQL instead, most of what you learned (routing, middleware, auth) transfers directly - only the model layer really changes
+
+<Callout type="info" title="Wisdom comes from here">
+  You now have real skills to bring real questions to. [`RESOURCES.md`](../index.mdx) lists [r/node](https://reddit.com/r/node)
+  and the Node.js Discord as places to get your next codebase, PR, or stuck moment looked at by other developers -
+  that's the part no lesson can substitute for.
+</Callout>
+
+## Interview angle
+
+<details>
+  <summary>Walk me through what happens when a React app calls `GET /todos` with a token.</summary>
+
+  The request passes through the middleware in `index.js` in order: the logger, `cors()` (which adds the
+  `Access-Control-Allow-Origin` header the browser checks), then `express.json()`. It reaches the `/todos`
+  router, where `requireAuth` verifies the JWT and sets `req.user` - or responds 401 and stops. The controller
+  then calls the model, which runs a parameterized query through the `pg` pool, and the rows go back with `res.json()`.
+  If anything throws, `next(err)` hands it to the four-argument error handler, which responds 500.
+</details>
+
+<details>
+  <summary>Walk me through register and login. Where does each piece from Week 2 show up?</summary>
+
+  `register` hashes the password with `bcrypt.hash(password, 10)` and stores only the hash; the `INSERT ... RETURNING id, email`
+  query means the hash never goes back in the response. `login` looks the user up by email, checks the password with
+  `bcrypt.compare`, and returns the same "Invalid credentials" 401 whether the email or the password was wrong. On success
+  it signs a JWT containing `userId` with `JWT_SECRET` from `.env`, valid for one hour.
+</details>
+
+<details>
+  <summary>Why is `index.js` ordered the way it is?</summary>
+
+  Express runs middleware and routes in registration order. `cors()` and `express.json()` must come before the routers so
+  every route gets the CORS header and a parsed `req.body`. The 404 handler goes after all routers so it only catches
+  requests nothing matched, and the error handler goes last, identified by its four parameters `(err, req, res, next)`.
+</details>
+
+<AskBox>
+  **Stuck, curious, or want more depth?** Ask your teacher (Claude) anything - about any lesson from
+  either week, or about what to build next now that the fundamentals are in place.
+</AskBox>

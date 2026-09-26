@@ -1,0 +1,165 @@
+---
+title: 'ORM Option: Prisma'
+sidebar_label: '10 · ORM Option: Prisma'
+sidebar_position: 10
+slug: orm-prisma
+description: What an ORM is, Prisma setup and schema, rewriting the model layer with Prisma, and when to pick raw SQL instead.
+tags: [express, prisma, orm, database]
+---
+
+<LessonHeader
+  kicker="Express · Lesson 10 of 14"
+  minutes={15}
+  subtitle={<>Write JavaScript, get SQL generated for you - an alternative worth knowing, not a required switch.</>}
+/>
+
+<Note>
+  Quick-reference version of this lesson: [Prisma Cheatsheet →](../cheatsheets/prisma.mdx)
+</Note>
+
+<Callout type="info" title="This is a side path">
+  Lessons 11-14 keep using the raw `pg` queries from Lesson 09 - that's what most teams expect a
+  backend dev to understand at a fundamental level. Treat Prisma as a tool you now recognize and can pick up
+  fast later, not something you must adopt right now.
+</Callout>
+
+## What an ORM actually is
+
+An ORM (Object-Relational Mapper) lets you describe your data and query it using JavaScript objects/methods -
+it generates the SQL underneath.
+
+<Callout type="react" title="React analogy">
+  You write JSX, not raw `document.createElement` calls - React generates the DOM operations for you.
+  Prisma is the same trade: you write `prisma.todo.findMany()`, it generates
+  `SELECT * FROM todos` underneath.
+</Callout>
+
+## Side by side
+
+| Raw pg (Lesson 09) | Prisma |
+|---|---|
+| `pool.query('SELECT * FROM todos')` | `prisma.todo.findMany()` |
+| `pool.query('SELECT * FROM todos WHERE id = $1', [id])` | `prisma.todo.findUnique({ where: { id } })` |
+| `INSERT ... RETURNING *` | `prisma.todo.create({ data: { title } })` |
+
+## Setup
+
+```bash title="terminal"
+npm install prisma --save-dev
+npm install @prisma/client
+npx prisma init
+```
+
+Define your model in `prisma/schema.prisma` - this replaces your manual `CREATE TABLE`:
+
+```js title="prisma/schema.prisma"
+model Todo {
+  id        Int      @id @default(autoincrement())
+  title     String
+  completed Boolean  @default(false)
+}
+```
+
+Then generate the migration and client:
+
+```bash title="terminal"
+npx prisma migrate dev --name init
+npx prisma generate
+```
+
+## The model layer, rewritten with Prisma
+
+Only `models/todoModel.js` would change - routes and controllers stay identical, same lesson as Lesson 04's swap-the-model point:
+
+```js title="models/todoModel.js"
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
+
+module.exports = {
+  getAll: () => prisma.todo.findMany(),
+  getById: (id) => prisma.todo.findUnique({ where: { id: Number(id) } }),
+  create: (data) => prisma.todo.create({ data: { title: data.title } }),
+  update: (id, data) => prisma.todo.update({ where: { id: Number(id) }, data: { title: data.title } }),
+  remove: (id) => prisma.todo.delete({ where: { id: Number(id) } }),
+};
+```
+
+<Callout type="warn" title="One real difference: error shape">
+  Prisma throws instead of returning `undefined`/`false` when a row doesn't exist for
+  `update`/`delete` - you'd catch that and turn it into your own 404, same try/catch pattern from Lesson 09.
+</Callout>
+
+## When to reach for which
+
+| Raw SQL (`pg`) | Prisma |
+|---|---|
+| Full control, no abstraction to learn | Faster to write, less boilerplate |
+| Best for learning what's actually happening | Best for team velocity in production |
+| You write and manage migrations by hand | Migrations generated and tracked for you |
+
+## Quick check
+
+<Quiz
+  answer={0}
+  options={['generate SQL from JS code', 'replace Express entirely soon', 'encrypt the whole database', 'validate incoming request bodies']}>
+  An ORM's main job is to...
+</Quiz>
+
+<Quiz
+  answer={0}
+  options={['your CREATE TABLE statements', 'your Express route definitions', 'your package.json scripts', 'your .env secret values']}>
+  `schema.prisma` is best compared to...
+</Quiz>
+
+<Quiz
+  answer={0}
+  options={['the models folder only', 'every route definition too', 'the whole controller layer', 'how Express itself works']}>
+  Switching from raw SQL to Prisma should mainly change...
+</Quiz>
+
+## Interview angle
+
+<details>
+  <summary>What is an ORM, and what does it trade away?</summary>
+
+  An Object-Relational Mapper lets you describe tables as models and query them with method calls,
+  generating the SQL for you. You gain speed and less boilerplate, but you give up some direct control
+  over the exact SQL being run, and you have one more abstraction to learn and debug through.
+</details>
+
+<details>
+  <summary>What do `npx prisma migrate dev` and `npx prisma generate` each do?</summary>
+
+  `migrate dev` works out what changed in `schema.prisma` since the last migration, writes a SQL migration file
+  and applies it to your dev database, so schema changes are tracked over time. `generate` builds the Prisma Client from
+  the schema, which is what your code imports as `PrismaClient`.
+</details>
+
+<details>
+  <summary>If you moved an Express app from raw `pg` to Prisma, what would change?</summary>
+
+  With a layered structure, only the model layer changes: each model function swaps a `pool.query` call
+  for a Prisma Client call. Routes and controllers keep calling the same functions. One behavioural
+  difference to handle is that Prisma's `update` and `delete` throw when the row does not exist, so you
+  catch that and return your own 404.
+</details>
+
+## Key terms
+
+<Terms>
+  <Term name="ORM">Object-Relational Mapper: query the database with objects and methods; it generates the SQL.</Term>
+  <Term name={<code>schema.prisma</code>}>The file where Prisma models are defined - replaces hand-written `CREATE TABLE`.</Term>
+  <Term name="Migration">A tracked, versioned change to the database schema, generated by `prisma migrate dev`.</Term>
+  <Term name={<code>PrismaClient</code>}>The generated client you import and call, e.g. `prisma.todo.findMany()`.</Term>
+</Terms>
+
+## Primary source
+
+<Note>
+  Reference: [Prisma - Official Documentation](https://www.prisma.io/docs).
+</Note>
+
+<AskBox>
+  **Stuck, curious, or want more depth?** Ask your teacher (Claude) anything - "should I actually
+  switch my Todo API to Prisma," "what's a migration really doing under the hood," anything at all.
+</AskBox>

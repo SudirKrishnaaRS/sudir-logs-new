@@ -16,7 +16,7 @@ const PATHS: Path[] = [
     title: 'Express + PostgreSQL',
     blurb: 'Routing, middleware, Postgres, auth, validation. React dev to backend dev in 14 short lessons.',
     to: '/express',
-    status: 'In progress',
+    status: '16 lessons',
   },
   {
     title: 'Next.js',

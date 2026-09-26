@@ -182,3 +182,177 @@ export function Term({name, children}: {name: ReactNode; children: ReactNode}) {
     </>
   );
 }
+
+/* ---------- Cheatsheet cards ---------- */
+
+type Tone = 'neutral' | 'info' | 'ok' | 'warn' | 'danger' | 'gold';
+
+/** Responsive grid of <CheatCard>s. */
+export function CheatGrid({children}: {children: ReactNode}) {
+  return <div className={styles.cheatGrid}>{children}</div>;
+}
+
+/**
+ * One quick-reference card: a bold mono title, what it's for, an example.
+ * Optional children render above the title (e.g. a <JoinVenn />).
+ */
+export function CheatCard({
+  title,
+  use,
+  ex,
+  tone = 'neutral',
+  children,
+}: {
+  title: ReactNode;
+  use?: ReactNode;
+  ex?: ReactNode;
+  tone?: Tone;
+  children?: ReactNode;
+}) {
+  return (
+    <div className={clsx(styles.cheatCard, tone !== 'neutral' && styles[`tone-${tone}`])}>
+      {children ? <div className={styles.cheatVisual}>{children}</div> : null}
+      <span className={styles.cheatTitle}>{title}</span>
+      {use ? <div className={styles.cheatUse}>{use}</div> : null}
+      {ex ? <div className={styles.cheatEx}>{ex}</div> : null}
+    </div>
+  );
+}
+
+/** Two-circle Venn diagram for SQL joins. */
+export function JoinVenn({
+  type,
+  left = 'users',
+  right = 'todos',
+}: {
+  type: 'inner' | 'left' | 'right' | 'full';
+  left?: string;
+  right?: string;
+}) {
+  const clipId = React.useId().replace(/:/g, '');
+  return (
+    <svg className={styles.venn} viewBox="0 0 160 100" role="img" aria-label={`${type} join of ${left} and ${right}`}>
+      <defs>
+        <clipPath id={clipId}>
+          <circle cx="105" cy="50" r="38" />
+        </clipPath>
+      </defs>
+      {type === 'inner' && <circle cx="55" cy="50" r="38" className={styles.vennLeft} clipPath={`url(#${clipId})`} />}
+      {(type === 'left' || type === 'full') && <circle cx="55" cy="50" r="38" className={styles.vennLeft} />}
+      {(type === 'right' || type === 'full') && <circle cx="105" cy="50" r="38" className={styles.vennRight} />}
+      <circle cx="55" cy="50" r="38" className={styles.vennRing} />
+      <circle cx="105" cy="50" r="38" className={styles.vennRing} />
+      <text x="30" y="54" className={styles.vennText}>{left}</text>
+      <text x="113" y="54" className={styles.vennText}>{right}</text>
+    </svg>
+  );
+}
+
+/* ---------- URL anatomy ---------- */
+
+type UrlKind = 'base' | 'param' | 'query';
+
+/**
+ * Colour-coded URL. parts = [['base', '/todos'], ['param', '/7'], ['query', '?sort=asc']].
+ * Children are <UrlLegend kind="...">label</UrlLegend> items.
+ */
+export function UrlAnatomy({parts, children}: {parts: [UrlKind, string][]; children?: ReactNode}) {
+  return (
+    <div className={styles.url}>
+      <div className={styles.urlBar}>
+        {parts.map(([kind, text], i) => (
+          <span key={i} className={clsx(styles.urlPart, styles[`url-${kind}`])}>
+            {text}
+          </span>
+        ))}
+      </div>
+      {children ? <div className={styles.urlLegend}>{children}</div> : null}
+    </div>
+  );
+}
+
+export function UrlLegend({kind, children}: {kind: UrlKind; children: ReactNode}) {
+  return (
+    <span className={styles.urlLegendItem}>
+      <span className={clsx(styles.dot, styles[`dot-${kind}`])} />
+      <span>{children}</span>
+    </span>
+  );
+}
+
+/* ---------- Cyclic process diagram ---------- */
+
+type LoopNode = {title: ReactNode; detail?: ReactNode};
+type LoopArrow = {glyph: string; label: ReactNode};
+
+/**
+ * Four nodes in a clockwise cycle: nodes[0] top-left, [1] top-right, [2] bottom-right, [3] bottom-left.
+ * arrows[0] goes 0->1 (top), [1] 1->2 (right), [2] 2->3 (bottom), [3] 3->0 (left).
+ */
+export function LoopDiagram({
+  nodes,
+  arrows,
+  center,
+}: {
+  nodes: [LoopNode, LoopNode, LoopNode, LoopNode];
+  arrows: [LoopArrow, LoopArrow, LoopArrow, LoopArrow];
+  center?: ReactNode;
+}) {
+  const nodeCls = [styles.loopN1, styles.loopN2, styles.loopN3, styles.loopN4];
+  const arrowCls = [styles.loopTop, styles.loopRight, styles.loopBottom, styles.loopLeft];
+  return (
+    <div className={styles.loop}>
+      {nodes.map((n, i) => (
+        <div key={`n${i}`} className={clsx(styles.loopNode, nodeCls[i])}>
+          {n.title}
+          {n.detail ? <small>{n.detail}</small> : null}
+        </div>
+      ))}
+      {arrows.map((a, i) => (
+        <div key={`a${i}`} className={clsx(styles.loopArrow, arrowCls[i])}>
+          <span className={styles.loopGlyph} aria-hidden>
+            {a.glyph}
+          </span>
+          <span className={styles.loopLabel}>{a.label}</span>
+        </div>
+      ))}
+      {center ? <div className={styles.loopCenter}>{center}</div> : null}
+    </div>
+  );
+}
+
+/* ---------- File tree ---------- */
+
+/** Wrap a nested markdown list: <FileTree>\n\n- 📁 src/\n  - 📄 index.js <FileNote>what it does</FileNote>\n\n</FileTree> */
+export function FileTree({children}: {children: ReactNode}) {
+  return <div className={styles.fileTree}>{children}</div>;
+}
+
+export function FileNote({children}: {children: ReactNode}) {
+  return <span className={styles.fileNote}>{children}</span>;
+}
+
+/* ---------- Checklist ---------- */
+
+/** Interactive checklist: <Checklist><Check>item</Check>...</Checklist>. Ticks are not saved; `done` starts an item ticked. */
+export function Checklist({children}: {children: ReactNode}) {
+  return <ul className={styles.checklist}>{children}</ul>;
+}
+
+export function Check({done: initial = false, children}: {done?: boolean; children: ReactNode}) {
+  const [done, setDone] = useState(initial);
+  return (
+    <li className={styles.check}>
+      <label>
+        <input type="checkbox" checked={done} onChange={(e) => setDone(e.target.checked)} />
+        <span className={clsx(done && styles.checkDone)}>{children}</span>
+      </label>
+    </li>
+  );
+}
+
+/* ---------- Badge ---------- */
+
+export function Badge({type = 'planned', children}: {type?: 'done' | 'optional' | 'planned'; children: ReactNode}) {
+  return <span className={clsx(styles.badge, styles[`badge-${type}`])}>{children}</span>;
+}

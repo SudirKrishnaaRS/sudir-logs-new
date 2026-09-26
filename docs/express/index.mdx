@@ -2,15 +2,17 @@
 title: Express + PostgreSQL
 sidebar_label: Overview
 slug: /express
-description: From React developer to confident Express + PostgreSQL backend developer.
+description: From React developer to confident Express + PostgreSQL backend developer in 2 weeks.
 ---
 
 <LessonHeader
-  kicker="Learning path · Backend"
-  subtitle="From React developer to confidently reading, writing, and debugging a production-grade Express + PostgreSQL API."
+  kicker="Learning path · Backend · 2 weeks at ~1 hour/day"
+  subtitle="The 80/20 of daily backend work - mapped to what you already know from React."
 />
 
 ## Mission
+
+Go from zero backend experience to confidently reading, writing, and debugging a production-grade Express + PostgreSQL API. Done looks like being able to:
 
 - Explain the request/response lifecycle and where Express fits, without hand-waving
 - Build a REST API from scratch: routing, middleware, params/query/body, centralized error handling
@@ -18,29 +20,65 @@ description: From React developer to confident Express + PostgreSQL backend deve
 - Connect to PostgreSQL and do CRUD with parameterized queries
 - Implement auth: bcrypt password hashing + JWT issuing and verification via middleware
 - Validate requests and configure CORS so a React frontend can call the API
+- Open an unfamiliar Express codebase and identify what each piece does on the first read
 
-## Path
+Out of scope for this track: MongoDB, full automated test suites, Docker / CI-CD / deployment.
 
-| # | Lesson | Status |
+<Callout type="react" title="Your anchor">
+  Just like `components + props + state + hooks` is ~80% of daily React work, the path below
+  is the ~80% of daily Express work. Master this and a production Express codebase stops looking like magic.
+</Callout>
+
+## React → Backend, concept for concept
+
+| React (you know this) | Express equivalent (you're learning this) |
+|---|---|
+| Functional component | Route handler function `(req, res) => {}` |
+| Props (data in) | `req.params` / `req.query` / `req.body` (data in) |
+| Return value / JSX (output) | `res.json()` / `res.send()` (output) |
+| Hooks (`useEffect` runs around render) | Middleware (`req, res, next` runs around the route) |
+| React Router routes | Express routes (`app.get`, `app.post`...) |
+| Component file structure | routes / controllers / models folder structure |
+| Context / global state | `req.user` set by auth middleware |
+| `fetch()` call you write in React | The API endpoint you're about to learn to build |
+
+## Prerequisites
+
+Not part of the 14-lesson count - background you can read anytime.
+
+| # | Lesson | Cheatsheet | Recommended before |
+|---|---|---|---|
+| 00 | [How Node.js runs your code - the event loop & libuv](./lessons/00-event-loop-and-libuv.mdx) | [Event Loop](./cheatsheets/event-loop.mdx) | Lesson 04 |
+| 00b | [PostgreSQL & SQL fundamentals - tables, joins, transactions](./lessons/00b-postgres-basics.mdx) | [PostgreSQL Basics](./cheatsheets/postgres-basics.mdx) | Lesson 08 |
+
+## Week 1 - Get a REST API running
+
+| # | Lesson | Cheatsheet |
 |---|---|---|
-| 00 | The Event Loop & libuv | Not migrated yet |
-| 00b | PostgreSQL & SQL Fundamentals | Not migrated yet |
-| 01 | What Is a Backend, Really? | Not migrated yet |
-| 02 | Routing | Not migrated yet |
-| 03 | [Middleware](./lessons/03-middleware.mdx) | **Preview (MDX)** |
-| 04 | Project Structure | Not migrated yet |
-| 05 | Request Data & CRUD | Not migrated yet |
-| 06 | Error Handling | Not migrated yet |
-| 07 | Capstone: The Complete Todo API | Not migrated yet |
-| 08 | PostgreSQL + Express | Not migrated yet |
-| 09 | Real CRUD & SQL Injection | Not migrated yet |
-| 10 | ORM Option: Prisma | Not migrated yet |
-| 11 | Auth Part 1: bcrypt & JWT | Not migrated yet |
-| 12 | Auth Part 2: Middleware | Not migrated yet |
-| 13 | Validation & CORS | Not migrated yet |
-| 14 | Capstone: The Full Production-Shaped API | Not migrated yet |
+| 01 | [What is a backend? Request/response cycle + hello-world server](./lessons/01-what-is-a-backend.mdx) | [Request / Response](./cheatsheets/request-response.mdx) |
+| 02 | [Routing - params, query strings, HTTP verbs](./lessons/02-routing.mdx) | [Routing](./cheatsheets/routing.mdx) |
+| 03 | [Middleware - the `(req, res, next)` model](./lessons/03-middleware.mdx) | [Middleware](./cheatsheets/middleware.mdx) |
+| 04 | [Project structure - routes / controllers / models](./lessons/04-project-structure.mdx) | [Project Structure](./cheatsheets/project-structure.mdx) |
+| 05 | [Request data - `req.body`, full in-memory CRUD](./lessons/05-request-data-crud.mdx) | [CRUD](./cheatsheets/crud.mdx) |
+| 06 | [Error handling - try/catch, central error middleware, status codes](./lessons/06-error-handling.mdx) | [Error Handling](./cheatsheets/error-handling.mdx) |
+| 07 | [Capstone - Todo API end to end (no new concepts)](./lessons/07-capstone-todo-api.mdx) | - |
 
-Until migration, the full course is on the [original Express-notes site](https://sudirkrishnaars.github.io/Express-notes/).
+## Week 2 - Real backend: database, auth, production hygiene
+
+| # | Lesson | Cheatsheet |
+|---|---|---|
+| 08 | [PostgreSQL + Express - connection pool, `.env`](./lessons/08-postgresql-connection.mdx) | [PostgreSQL Connection](./cheatsheets/postgresql.mdx) |
+| 09 | [Real CRUD - parameterized queries, SQL injection](./lessons/09-real-crud-sql-injection.mdx) | [Real CRUD](./cheatsheets/real-crud.mdx) |
+| 10 | [ORM option - Prisma as an alternative to raw SQL](./lessons/10-orm-prisma.mdx) <Badge type="optional">optional</Badge> | [Prisma](./cheatsheets/prisma.mdx) |
+| 11 | [Auth part 1 - bcrypt hashing, issuing a JWT](./lessons/11-auth-bcrypt-jwt.mdx) | [Auth Tokens](./cheatsheets/auth-tokens.mdx) |
+| 12 | [Auth part 2 - auth middleware, protecting routes](./lessons/12-auth-middleware.mdx) | [Auth Middleware](./cheatsheets/auth-middleware.mdx) |
+| 13 | [Validation + CORS - express-validator, calling the API from React](./lessons/13-validation-cors.mdx) | [Validation & CORS](./cheatsheets/validation-cors.mdx) |
+| 14 | [Capstone - full CRUD + auth + Postgres API, "what's next"](./lessons/14-capstone-full-api.mdx) | - |
+
+<Note>
+  Lessons 07 and 14 are capstones with no new concepts, so they don't get their own cheatsheet - they lean on the ones above.
+  Every source the lessons cite is collected on the [Resources](./resources.mdx) page.
+</Note>
 
 ## Whole-track study aids
 
@@ -51,7 +89,7 @@ Until migration, the full course is on the [original Express-notes site](https:/
 
 | Aid | Use it when | Status |
 |---|---|---|
-| Recap in 30 min | Right before an interview, or coming back after months away | Planned |
-| Interview Q&A | Rehearsing answers across the whole track | Planned |
-| Quiz bank | Testing yourself on every lesson's questions, shuffled | Planned |
-| Glossary | Checking a term's meaning | Planned |
+| Recap in 30 min | Right before an interview, or coming back after months away | <Badge>planned</Badge> |
+| Interview Q&A | Rehearsing answers across the whole track | <Badge>planned</Badge> |
+| Quiz bank | Testing yourself on every lesson's questions, shuffled | <Badge>planned</Badge> |
+| Glossary | Checking a term's meaning | <Badge>planned</Badge> |

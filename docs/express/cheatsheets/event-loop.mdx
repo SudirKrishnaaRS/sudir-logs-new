@@ -1,0 +1,48 @@
+---
+title: 'The Event Loop, at a Glance'
+sidebar_label: 'Event Loop & libuv'
+slug: event-loop
+description: Quick reference for the call stack, libuv, the callback queue and the event loop.
+tags: [express, node, event-loop, cheatsheet]
+---
+
+<LessonHeader
+  kicker="Express · Cheatsheet"
+  subtitle={<>The compressed version of Lesson 00 - for when you just need to look something up.</>}
+/>
+
+<Note>Full lesson: [Prerequisite 00 - How Node.js Actually Runs Your Code](../lessons/00-event-loop-and-libuv.mdx)</Note>
+
+<LoopDiagram
+  nodes={[
+    {title: '1. Call Stack', detail: 'your JS code runs here'},
+    {title: '2. libuv', detail: 'handles the slow part'},
+    {title: '3. Callback Queue', detail: 'waits its turn'},
+    {title: '4. Event Loop', detail: 'stack empty yet?'},
+  ]}
+  arrows={[
+    {glyph: '→', label: 'async call made'},
+    {glyph: '↓', label: 'callback queued'},
+    {glyph: '←', label: 'next in line'},
+    {glyph: '↑', label: 'callback runs'},
+  ]}
+  center="⟳ forever"
+/>
+
+| Term | What it means |
+|---|---|
+| Call stack | Where your synchronous JS actually executes, one frame at a time |
+| libuv | C library that runs slow work (files, network, timers, DB) off the JS thread |
+| Callback queue | Holds finished async callbacks until the call stack is empty |
+| Event loop | Continuously checks "is the stack empty?" then runs the next queued callback |
+
+<Callout type="warn" title="Core rule">
+  A callback (even a 0ms `setTimeout`) never runs until the call stack is completely empty. Synchronous code always finishes first.
+</Callout>
+
+```js
+console.log('first');
+setTimeout(() => console.log('third'), 0);
+console.log('second');
+// Always: first, second, third
+```

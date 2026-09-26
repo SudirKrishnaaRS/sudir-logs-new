@@ -1,0 +1,204 @@
+---
+title: 'Request Data & Completing CRUD'
+sidebar_label: '05 · Request Data & CRUD'
+sidebar_position: 5
+slug: request-data-crud
+description: Reading and validating req.body, then finishing the Todo API with Update and Delete.
+tags: [express, crud]
+---
+
+<LessonHeader
+  kicker="Express · Lesson 05 of 14"
+  minutes={15}
+  subtitle={<>Finishing the Todo API - all four operations, properly validated.</>}
+/>
+
+<Note>
+  Quick-reference version of this lesson: [CRUD Cheatsheet →](../cheatsheets/crud.mdx)
+</Note>
+
+<Callout type="react" title="Where you left off">
+  Lesson 04 split your Todo API into `routes/`, `controllers/`, `models/` and covered
+  Create and Read. This lesson finishes it - Update and Delete - and looks closely at `req.body`, the
+  piece you'll read from constantly.
+</Callout>
+
+## CRUD, mapped to what you already have
+
+<CheatGrid>
+  <CheatCard tone="info" title="READ" use="GET /todos, GET /todos/:id" ex="200 OK" />
+  <CheatCard tone="ok" title="CREATE" use="POST /todos" ex="201 Created" />
+  <CheatCard tone="warn" title="UPDATE" use="PUT /todos/:id" ex="200 OK" />
+  <CheatCard tone="danger" title="DELETE" use="DELETE /todos/:id" ex="204 No Content" />
+</CheatGrid>
+
+## req.body - what it is, and what it isn't
+
+`req.body` holds whatever JSON the client sent in the request body. It only exists because of
+`app.use(express.json())` from Lesson 03 - the middleware that parses the raw request into that object
+before your controller ever sees it.
+
+```js
+// Client sends: POST /todos  { "title": "Buy milk" }
+function createTodo(req, res) {
+  console.log(req.body); // { title: 'Buy milk' }
+}
+```
+
+<Callout type="warn" title="Never trust the body">
+  A client can send anything - or nothing. Before using `req.body.title`, check it actually exists.
+  Skipping this is the #1 source of confusing 500 errors in beginner APIs.
+</Callout>
+
+```js
+function createTodo(req, res) {
+  const { title } = req.body;
+
+  if (!title) {
+    return res.status(400).json({ error: 'title is required' }); // stop here - bad request
+  }
+
+  const newTodo = todoModel.create({ title });
+  res.status(201).json(newTodo);
+}
+```
+
+<Note>
+  This is manual validation - fine for now. Lesson 13 replaces it with `express-validator`, a library built for exactly this, once your rules get more complex.
+</Note>
+
+## Completing the model
+
+Add `update` and `remove` to `models/todoModel.js`, alongside what Lesson 04 already has:
+
+```js title="models/todoModel.js"
+update: (id, data) => {
+  const todo = todos.find(t => t.id === Number(id));
+  if (!todo) return null;
+  todo.title = data.title;
+  return todo;
+},
+
+remove: (id) => {
+  const index = todos.findIndex(t => t.id === Number(id));
+  if (index === -1) return false;
+  todos.splice(index, 1);
+  return true;
+},
+```
+
+## Completing the controller
+
+```js title="controllers/todoController.js"
+function updateTodo(req, res) {
+  const { title } = req.body;
+  if (!title) return res.status(400).json({ error: 'title is required' });
+
+  const updated = todoModel.update(req.params.id, { title });
+  if (!updated) return res.status(404).json({ error: 'Todo not found' });
+
+  res.json(updated);
+}
+
+function deleteTodo(req, res) {
+  const deleted = todoModel.remove(req.params.id);
+  if (!deleted) return res.status(404).json({ error: 'Todo not found' });
+
+  res.status(204).end(); // success, nothing to send back
+}
+
+module.exports = { getAllTodos, getTodoById, createTodo, updateTodo, deleteTodo };
+```
+
+## Completing the routes
+
+```js title="routes/todos.js"
+router.put('/:id', todoController.updateTodo);
+router.delete('/:id', todoController.deleteTodo);
+```
+
+Your Todo API now supports all four operations, split cleanly across the three layers from Lesson 04.
+
+## Try it yourself (10 min)
+
+Run through the full lifecycle of one todo:
+
+```bash title="terminal"
+curl -X POST http://localhost:3000/todos -H "Content-Type: application/json" -d '{"title":"Buy milk"}'
+curl http://localhost:3000/todos/2
+curl -X PUT http://localhost:3000/todos/2 -H "Content-Type: application/json" -d '{"title":"Buy oat milk"}'
+curl -X DELETE http://localhost:3000/todos/2
+curl http://localhost:3000/todos/2
+```
+
+<Callout type="warn" title="Prove the validation works">
+  Now try `curl -X POST http://localhost:3000/todos -H "Content-Type: application/json" -d '{}'` -
+  you should get a `400`, not a crash and not a silently-created todo.
+</Callout>
+
+## Quick check
+
+<Quiz
+  answer={0}
+  options={['stays undefined', 'still populated', 'becomes empty', 'throws immediately']}>
+  Without `app.use(express.json())`, `req.body` on a POST request...
+</Quiz>
+
+<Quiz
+  answer={0}
+  options={['404', '200', '201', '204']}>
+  A PUT request targets `/todos/999`, an id that doesn't exist. It should return...
+</Quiz>
+
+<Quiz
+  answer={0}
+  options={['return 400 Bad Request', 'return 201 and continue', 'crash the whole server', 'silently create empty todo']}>
+  A POST /todos request arrives with an empty body `{}`. Good practice is to...
+</Quiz>
+
+## Interview angle
+
+<details>
+  <summary>Where does `req.body` come from?</summary>
+
+  Express does not parse request bodies on its own. Body-parsing middleware such as `express.json()`
+  reads the raw request, parses the JSON, and puts the result on `req.body` before your handler runs.
+  Without it, `req.body` is `undefined` no matter what the client sent.
+</details>
+
+<details>
+  <summary>Why validate `req.body` in the handler, and what should a failed check return?</summary>
+
+  The client controls the body and can send anything, including nothing. Checking required fields up
+  front lets you return a clear `400 Bad Request` and stop, instead of letting missing data cause a
+  confusing `500` deeper in your code or quietly saving a bad record.
+</details>
+
+<details>
+  <summary>Which status codes fit update and delete, including the not-found case?</summary>
+
+  A successful update returns `200` with the updated record; a successful delete with nothing to send
+  back returns `204 No Content`. If the id in the URL doesn't match any record, both should return
+  `404 Not Found`.
+</details>
+
+## Key terms
+
+<Terms>
+  <Term name="CRUD">Create, Read, Update, Delete - mapped to POST, GET, PUT and DELETE.</Term>
+  <Term name={<code>req.body</code>}>The parsed request body the client sent; populated by `express.json()`.</Term>
+  <Term name="Manual validation">Checking required fields yourself and returning `400` early when they're missing.</Term>
+  <Term name={<code>res.status(204).end()</code>}>Ends a successful response with no body, as used for delete.</Term>
+</Terms>
+
+## Primary source
+
+<Note>
+  Watch the CRUD/routing section of [Traversy Media's Express Crash Course](https://www.youtube.com/watch?v=CnH3kAXSrmU).
+  Reference: [Express.js official API docs - req.body](https://expressjs.com/en/api.html#req.body).
+</Note>
+
+<AskBox>
+  **Stuck, curious, or want more depth?** Ask your teacher (Claude) anything - "what if two fields are
+  required instead of one," "should update replace the whole object or merge it," anything at all.
+</AskBox>

@@ -1,0 +1,44 @@
+---
+title: 'The Request/Response Cycle, at a Glance'
+sidebar_label: 'Request / Response'
+slug: request-response
+description: Quick reference for the request/response cycle, req vs res, and a minimum viable Express server.
+tags: [express, http, basics, cheatsheet]
+---
+
+<LessonHeader
+  kicker="Express · Cheatsheet"
+  subtitle={<>The compressed version of Lesson 01 - for when you just need to look something up.</>}
+/>
+
+<Note>Full lesson: [Lesson 01 - What Is a Backend, Really?](../lessons/01-what-is-a-backend.mdx)</Note>
+
+<Flow label="React app sends an HTTP request to the Express server, which sends an HTTP response back for React to render">
+  <Step type="client">React app<small><code>fetch('/api/todos')</code></small></Step>
+  <Step>HTTP request</Step>
+  <Step>Express server<small>route handler runs</small></Step>
+  <Step>HTTP response</Step>
+  <Step type="client">React app<small>renders data</small></Step>
+</Flow>
+
+| Piece | What it holds | React equivalent |
+|---|---|---|
+| `req` | Everything the client sent: URL, params, query, body | Arguments passed into `fetch()` |
+| `res` | What you send back: JSON, status code, headers | What the `fetch()` promise resolves to |
+
+## Minimum viable server
+
+```js
+const express = require('express');
+const app = express();
+
+app.get('/', (req, res) => {
+  res.send('Hello from your first backend!');
+});
+
+app.listen(3000, () => console.log('Server running on http://localhost:3000'));
+```
+
+<Callout type="react" title="React analogy">
+  `app.get(path, (req, res) => {...})` is a functional component: input in (`req`), output out (`res`).
+</Callout>

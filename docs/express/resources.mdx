@@ -1,0 +1,71 @@
+---
+title: Express + PostgreSQL Resources
+sidebar_label: Resources
+slug: resources
+description: Trusted docs, videos and communities the Express track is grounded in.
+---
+
+<LessonHeader
+  kicker="Express · Resources"
+  subtitle="The high-trust sources every lesson cites, grouped as Knowledge, Video and Wisdom."
+/>
+
+
+## Knowledge
+
+- [Express.js - Routing Guide](https://expressjs.com/en/guide/routing/)
+  Official docs. Use for: `app.get/post/put/delete`, route params, `express.Router()`.
+- [Express.js - Using Middleware](https://expressjs.com/en/guide/using-middleware.html)
+  Official docs. Use for: the `(req, res, next)` signature, `app.use()`, middleware ordering - the single most important Express concept.
+- [Express.js - Error Handling](https://expressjs.com/en/guide/error-handling.html)
+  Official docs. Use for: centralized error middleware, `next(err)`, default error handler behavior.
+- [MDN - Express Tutorial Part 4: Routes and Controllers](https://developer.mozilla.org/en-US/docs/Learn_web_development/Extensions/Server-side/Express_Nodejs/routes)
+  High-trust, beginner-oriented walkthrough. Use for: seeing routes/controllers separation in a fuller example than the official docs show.
+- [node-postgres (pg) - Official Documentation](https://node-postgres.com/)
+  Use for: connection pools, parameterized queries (`$1, $2` placeholders), avoiding SQL injection, transactions.
+- [pg on npm](https://www.npmjs.com/package/pg)
+  Use for: install instructions and version/compatibility notes.
+- [JWT.io - Introduction to JSON Web Tokens](https://www.jwt.io/introduction)
+  Use for: what a JWT actually is (header.payload.signature), why it's signed not encrypted, standard claims.
+- [express-validator - Official Docs](https://express-validator.github.io/docs/)
+  Use for: request validation/sanitization middleware (`body()`, `check()`, `validationResult()`).
+- [cors middleware - Express.js Resources](https://expressjs.com/en/resources/middleware/cors/)
+  Use for: enabling cross-origin requests from a React dev server to the Express API - directly relevant since the learner's frontend and backend run on different ports.
+- [MDN - HTTP response status codes](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status)
+  Use for: picking the correct status code (200 vs 201 vs 204 vs 400 vs 401 vs 404 vs 500) instead of guessing.
+- [Node.js official docs - The Event Loop](https://nodejs.org/learn/asynchronous-work/event-loop-timers-and-nexttick)
+  Use for: the canonical, official explanation of the event loop, timers, and `process.nextTick` (Lesson 00).
+- [dotenv - Official npm docs](https://www.npmjs.com/package/dotenv)
+  Use for: loading `.env` files into `process.env` (Lesson 08).
+- [OWASP - SQL Injection Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html)
+  The authoritative source on why/how to prevent SQL injection. Use for: Lesson 09 (parameterized queries).
+- [Prisma - Official Documentation](https://www.prisma.io/docs)
+  Use for: schema definition, migrations, and the Prisma Client query API (Lesson 10).
+- [bcrypt - npm](https://www.npmjs.com/package/bcrypt)
+  Use for: `hash()`/`compare()` API for password hashing (Lesson 11).
+- [jsonwebtoken - npm](https://www.npmjs.com/package/jsonwebtoken)
+  Use for: `sign()`/`verify()` API for issuing and checking JWTs (Lessons 11-12).
+- [RoadsideCoder - Postgres Tutorial Notes](https://notes.roadsidecoder.com/notes/postgres-tutorial)
+  High-quality, diagram-first Postgres notes (with an accompanying video) - the resource the "Postgres Basics" prerequisite's topic selection was modeled on. Its diagrams are that site's own original artwork and were not reproduced; the prerequisite lesson redraws equivalent diagrams from scratch. Use for: a second, deeper pass on joins, jsonb, CTEs, and Supabase-specific extras this course doesn't cover.
+- [PostgreSQL official docs - Joins Between Tables](https://www.postgresql.org/docs/current/tutorial-join.html)
+  Use for: the canonical reference on JOIN syntax and behavior (Postgres Basics prerequisite).
+
+## Video (English)
+
+English-language courses with a fast-paced, project-first, no-fluff style:
+
+- [Traversy Media - Express Crash Course](https://www.youtube.com/watch?v=CnH3kAXSrmU) ([code](https://github.com/bradtraversy/express_crash_course))
+  ~1h45m, Brad Traversy. Use for: Lessons 1-6 (routing, middleware, req/res, CRUD, error handling).
+- [freeCodeCamp - Node.js / Express Course, Build 4 Projects (John Smilga)](https://www.youtube.com/watch?v=qwfE7fSVaZM)
+  ~10hrs, project-based (task manager, store API, JWT auth, jobs API). Use for: Lessons 8-14 (real CRUD against a DB, JWT auth, validation).
+- [Academind - Node.js/Express RESTful API series (Maximilian Schwarzmüller)](https://www.youtube.com/playlist?list=PL55RiY5tL51q4D-B63KBnygU6opNPFk_q)
+  Use as a backup/second-opinion explainer if a concept needs a slower, more conceptual pass than the crash-course pace above.
+- [Codevolution - Node.js Tutorial #38 - libuv](https://www.youtube.com/watch?v=mVx_PzR9SPo) and [#42 - Event Loop](https://www.youtube.com/watch?v=L18RHG2DwwA)
+  Short, diagram-first explanations. Use for: Lesson 00 (prerequisite).
+
+## Wisdom (Communities)
+
+- [r/node](https://reddit.com/r/node)
+  Active, reasonably high-signal community for Node/Express questions and code review requests.
+- [Node.js Discord (nodeiscool / official-ish community servers)](https://discord.com/invite/nodejs)
+  Use for: real-time troubleshooting once past the basics.

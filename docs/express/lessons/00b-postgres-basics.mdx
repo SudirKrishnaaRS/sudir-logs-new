@@ -1,0 +1,263 @@
+---
+title: 'PostgreSQL & SQL Fundamentals'
+sidebar_label: '00b · PostgreSQL & SQL Basics'
+sidebar_position: 0.5
+slug: postgres-basics
+description: Tables, data types, constraints, raw SQL CRUD, foreign keys, joins, aggregations, indexes and transactions.
+tags: [express, postgresql, sql]
+---
+
+<LessonHeader
+  kicker="Express · Prerequisite 00b"
+  minutes={25}
+  subtitle={<>The raw SQL knowledge Lessons 08-09 assume - tables, joins, and the syntax you'll type constantly.</>}
+/>
+
+<Note>
+  Quick-reference version of this lesson: [Postgres Basics Cheatsheet →](../cheatsheets/postgres-basics.mdx)
+</Note>
+
+<Callout type="info" title="Why this exists">
+  Lessons 08-09 use `CREATE TABLE`, `SELECT`, `INSERT`, and parameterized
+  queries without teaching raw SQL from first principles. If any of that felt like syntax you copied rather
+  than understood, read this first - it's everything underneath those two lessons.
+</Callout>
+
+<Callout type="warn" title="A note on sources">
+  This lesson's topic selection was inspired by [RoadsideCoder's Postgres notes](https://notes.roadsidecoder.com/notes/postgres-tutorial) -
+  genuinely excellent, worth reading directly. Its diagrams are that site's original artwork, so rather than
+  copy them, every diagram below was redrawn from scratch in this course's own style. Same ideas, original images -
+  that's the safe way to credit a source you like.
+</Callout>
+
+## Vocabulary
+
+| Term | What it means |
+|---|---|
+| Table | A named collection of rows, all with the same columns - like an array of objects with a fixed shape |
+| Row | One record - one todo, one user |
+| Column | One field every row has - `title`, `email` |
+| Primary key (PK) | The column that uniquely identifies a row - your `id` |
+| Foreign key (FK) | A column that points at another table's primary key - how tables relate |
+
+## Data types & constraints
+
+| Type | Holds |
+|---|---|
+| `SERIAL` | Auto-incrementing integer - typical primary key |
+| `TEXT` | A string, any length |
+| `INTEGER` / `NUMERIC` | Whole numbers / precise decimals (money!) |
+| `BOOLEAN` | true/false |
+| `TIMESTAMP` | A date and time |
+
+| Constraint | What it enforces |
+|---|---|
+| `NOT NULL` | This column can never be empty |
+| `UNIQUE` | No two rows can share this value |
+| `DEFAULT` | What to use if no value is given |
+| `CHECK` | A custom rule the value must satisfy |
+
+```sql
+CREATE TABLE users (
+  id SERIAL PRIMARY KEY,
+  email TEXT UNIQUE NOT NULL,
+  age INTEGER CHECK (age >= 13),
+  created_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+## CRUD, in raw SQL
+
+The four operations behind every model function you wrote in Lesson 09:
+
+| Operation | Syntax |
+|---|---|
+| Read | `SELECT * FROM todos WHERE id = 1;` |
+| Create | `INSERT INTO todos (title) VALUES ('Buy milk');` |
+| Update | `UPDATE todos SET title = 'Buy oat milk' WHERE id = 1;` |
+| Delete | `DELETE FROM todos WHERE id = 1;` |
+
+## Relationships: foreign keys
+
+Your `users` and `todos` tables from Lessons 08-11 have never actually been connected.
+A foreign key is how you'd fix that - a column on one table pointing at another table's primary key:
+
+```sql
+ALTER TABLE todos ADD COLUMN user_id INTEGER REFERENCES users(id);
+```
+
+<Flow label="The todos table's user_id foreign key points at the users table's id primary key">
+  <Step type="client">todos<small>id (PK), user_id (FK), title</small></Step>
+  <Step>users<small>id (PK), email</small></Step>
+</Flow>
+
+<Callout type="react" title="React analogy">
+  A foreign key is like passing an `id` prop down instead of duplicating the whole object -
+  `todos.user_id` references a `users` row instead of copying that user's data into every todo.
+</Callout>
+
+## Joins: combining tables
+
+A join query reads from two tables at once, matched by that foreign key. The four you'll actually use:
+
+<CheatGrid>
+  <CheatCard title="INNER JOIN" use="Only rows that match in both tables" ex="users with at least one todo">
+    <JoinVenn type="inner" />
+  </CheatCard>
+  <CheatCard title="LEFT JOIN" use="All of the left table, matched where possible" ex="every user, todos or not">
+    <JoinVenn type="left" />
+  </CheatCard>
+  <CheatCard title="RIGHT JOIN" use="All of the right table, matched where possible" ex="every todo, even orphaned ones">
+    <JoinVenn type="right" />
+  </CheatCard>
+  <CheatCard title="FULL OUTER" use="Every row from both, matched or not" ex="everything, gaps included">
+    <JoinVenn type="full" />
+  </CheatCard>
+</CheatGrid>
+
+```sql
+SELECT users.email, todos.title
+FROM users
+INNER JOIN todos ON todos.user_id = users.id;
+```
+
+<Note>
+  Two rarer ones you'll recognize but rarely write: `CROSS JOIN` (every combination of both tables) and a **self join** (a table joined against itself, e.g. an employee/manager hierarchy).
+</Note>
+
+## Aggregations
+
+Joins and `GROUP BY` combine constantly - "how many todos does each user have":
+
+```sql
+SELECT users.email, COUNT(todos.id) AS todo_count
+FROM users
+LEFT JOIN todos ON todos.user_id = users.id
+GROUP BY users.email;
+```
+
+| Function | Does |
+|---|---|
+| `COUNT()` | How many rows |
+| `SUM()` / `AVG()` | Total / average of a numeric column |
+| `GROUP BY` | Bucket rows before aggregating - "per user," "per day" |
+
+## Indexes (the idea, not the tuning)
+
+| Without an index | With an index |
+|---|---|
+| Postgres checks every row in order | Postgres jumps straight to matches via a B-tree |
+| Fine for hundreds of rows | The difference at millions of rows |
+
+```sql
+CREATE INDEX idx_todos_user_id ON todos(user_id);
+```
+
+<Note>
+  Primary keys and `UNIQUE` columns already get an index automatically - you'd add one manually for columns you filter/join on constantly, like this `user_id`.
+</Note>
+
+## Transactions (the concept)
+
+Everything between `BEGIN` and `COMMIT` is one atomic unit - both writes land, or neither does:
+
+<Flow label="A successful transaction: BEGIN, writes happen, COMMIT saves everything">
+  <Step type="client">BEGIN</Step>
+  <Step>writes happen</Step>
+  <Step type="client">COMMIT - all saved</Step>
+</Flow>
+
+<Flow label="A failed transaction: BEGIN, something fails, ROLLBACK saves nothing">
+  <Step type="client">BEGIN</Step>
+  <Step type="warn">something fails</Step>
+  <Step type="error">ROLLBACK - nothing saved</Step>
+</Flow>
+
+<Note>
+  This is the SQL concept. Week 3's **Database Transactions** lesson shows how to actually do this from Express, using a checked-out `pg` client instead of `pool.query`.
+</Note>
+
+## Try it yourself (15 min)
+
+1. Add the `user_id` foreign key from above to your real `todos` table.
+2. Insert one user and two todos pointing at that user's `id`.
+3. Run the `INNER JOIN` query above and confirm you see both todos with the user's email.
+4. Run the `COUNT` query and confirm it shows `2`.
+
+## Quick check
+
+<Quiz
+  answer={0}
+  options={["points at another table's row", 'stores a copy of that row', "encrypts the column's value", 'indexes the whole database']}>
+  A foreign key column does what?
+</Quiz>
+
+<Quiz
+  answer={0}
+  options={['INNER JOIN', 'LEFT JOIN', 'RIGHT JOIN', 'FULL OUTER JOIN']}>
+  Which join returns only rows that match in both tables?
+</Quiz>
+
+<Quiz
+  answer={0}
+  options={['every user, matched or not', 'only users with todos', 'every todo, matched or not', "neither table's rows"]}>
+  A `LEFT JOIN` from `users` to `todos` keeps...
+</Quiz>
+
+<Quiz
+  answer={0}
+  options={['never actually gets saved', 'stays saved regardless', 'saves to a backup table', 'throws immediately always']}>
+  If a write between `BEGIN` and `ROLLBACK` already ran, it...
+</Quiz>
+
+## Interview angle
+
+<details>
+  <summary>What's the difference between an INNER JOIN and a LEFT JOIN?</summary>
+
+  An `INNER JOIN` returns only rows that have a match in both tables - users with no todos disappear from
+  the result. A `LEFT JOIN` keeps every row from the left table and fills the right table's columns with
+  `NULL` where there is no match. That is why the "todos per user" count uses a `LEFT JOIN`: users with
+  zero todos still show up, with a count of 0.
+</details>
+
+<details>
+  <summary>What is a foreign key, and what does it give you beyond just storing an id?</summary>
+
+  A foreign key is a column that references another table's primary key, like `todos.user_id` pointing
+  at `users.id`. Beyond storing the id, the database enforces it: an insert or update that sets
+  `user_id` to an id that doesn't exist in `users` is rejected. That keeps related data consistent
+  without duplicating the user's data into every todo.
+</details>
+
+<details>
+  <summary>What is a transaction, and when would you need one?</summary>
+
+  A transaction groups several statements between `BEGIN` and `COMMIT` into one atomic unit: either all
+  of them are saved, or, if something fails and you `ROLLBACK`, none of them are. You need one whenever
+  multiple writes only make sense together - for example, moving money between two accounts, where
+  debiting one without crediting the other would leave the data wrong.
+</details>
+
+## Key terms
+
+<Terms>
+  <Term name="Primary key">The column that uniquely identifies each row, usually `id`.</Term>
+  <Term name="Foreign key">A column that references another table's primary key; how tables relate.</Term>
+  <Term name="Join">A query that combines rows from two tables, matched on a condition like `todos.user_id = users.id`.</Term>
+  <Term name="Index">A lookup structure (a B-tree by default) that lets Postgres find matching rows without scanning every row.</Term>
+  <Term name="Transaction">Statements between `BEGIN` and `COMMIT` that succeed or fail as one unit.</Term>
+</Terms>
+
+## Primary source
+
+<Note>
+  [RoadsideCoder - Postgres Tutorial Notes](https://notes.roadsidecoder.com/notes/postgres-tutorial) -
+  the resource that inspired this lesson's structure; read it directly for its own diagrams and accompanying video.
+  Official reference: [PostgreSQL docs - Joins Between Tables](https://www.postgresql.org/docs/current/tutorial-join.html).
+</Note>
+
+<AskBox>
+  **Stuck, curious, or want more depth?** Ask your teacher (Claude) anything - "what's a self join actually
+  used for," "when would I use RIGHT JOIN instead of just swapping the table order," anything at all.
+</AskBox>

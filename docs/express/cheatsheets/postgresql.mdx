@@ -1,0 +1,45 @@
+---
+title: 'Connecting to Postgres, at a Glance'
+sidebar_label: 'PostgreSQL Connection'
+slug: postgresql
+description: Quick reference for installing pg and dotenv, the .env connection string, the shared pool and the todos table.
+tags: [express, postgresql, database, cheatsheet]
+---
+
+<LessonHeader
+  kicker="Express · Cheatsheet"
+  subtitle={<>The compressed version of Lesson 08 - for when you just need to look something up.</>}
+/>
+
+<Note>Full lesson: [Lesson 08 - Connecting Express to a Real Database](../lessons/08-postgresql-connection.mdx)</Note>
+
+```bash title="terminal"
+npm install pg dotenv
+```
+
+```bash title=".env"
+# .env - never committed
+DATABASE_URL=postgres://postgres:yourpassword@localhost:5432/tododb
+```
+
+```js
+// index.js - top of file
+require('dotenv').config();
+
+// db/pool.js
+const { Pool } = require('pg');
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+module.exports = pool;
+```
+
+```sql
+CREATE TABLE todos (
+  id SERIAL PRIMARY KEY,
+  title TEXT NOT NULL,
+  completed BOOLEAN DEFAULT false
+);
+```
+
+<Callout type="warn" title="Always remember">
+  `.env` goes in `.gitignore` before your first commit. `pool.query()` returns a Promise - it's async.
+</Callout>

@@ -1,0 +1,207 @@
+---
+title: 'Project Structure: Organizing Express Like a Real App'
+sidebar_label: '04 · Project Structure'
+sidebar_position: 4
+slug: project-structure
+description: Splitting an Express app into routes, controllers and models, and mounting an express.Router().
+tags: [express, project-structure]
+---
+
+<LessonHeader
+  kicker="Express · Lesson 04 of 14"
+  minutes={15}
+  subtitle={<>The Express equivalent of splitting components into files instead of one giant App.jsx.</>}
+/>
+
+<Note>
+  Quick-reference version of this lesson: [Project Structure Cheatsheet →](../cheatsheets/project-structure.mdx)
+</Note>
+
+<Callout type="react" title="Start from what you know">
+  You'd never put every component, every hook, and every API call in one 2000-line `App.jsx`.
+  You split by responsibility - components, hooks, services. Express codebases split the same way, just with different names.
+</Callout>
+
+## The problem
+
+Everything you've written so far lives in one `index.js`. That's fine for 3 routes. It falls apart
+at 30 - routing, business logic, and data all tangled in one file nobody wants to open.
+
+## The pattern: routes / controllers / models
+
+Almost every production Express app splits into three layers. Each has exactly one job:
+
+| Layer | Job | React equivalent |
+|---|---|---|
+| `routes/` | Wiring only - which URL+method calls which function | Your React Router route config |
+| `controllers/` | The actual logic - reads req, decides what to do, sends res | Logic inside a custom hook or container |
+| `models/` | The data itself - shape, and how to get/save it | A small API client / data module you'd import |
+
+## What the folder looks like
+
+<FileTree>
+
+- 📁 project-root/
+  - 📄 index.js <FileNote>- creates the app, mounts routes, starts the server</FileNote>
+  - 📁 routes/
+    - 📄 todos.js <FileNote>- URL → controller wiring</FileNote>
+  - 📁 controllers/
+    - 📄 todoController.js <FileNote>- the actual logic</FileNote>
+  - 📁 models/
+    - 📄 todoModel.js <FileNote>- the data shape + how to get/save it</FileNote>
+
+</FileTree>
+
+## The same Todo API, properly split
+
+`models/todoModel.js` - the data, and nothing else:
+
+```js title="models/todoModel.js"
+let todos = [{ id: 1, title: 'Learn Express' }];
+let nextId = 2;
+
+module.exports = {
+  getAll: () => todos,
+  getById: (id) => todos.find(t => t.id === Number(id)),
+  create: (data) => {
+    const todo = { id: nextId++, title: data.title };
+    todos.push(todo);
+    return todo;
+  },
+};
+```
+
+`controllers/todoController.js` - the logic, and nothing else:
+
+```js title="controllers/todoController.js"
+const todoModel = require('../models/todoModel');
+
+function getAllTodos(req, res) {
+  res.json(todoModel.getAll());
+}
+
+function getTodoById(req, res) {
+  const todo = todoModel.getById(req.params.id);
+  if (!todo) return res.status(404).json({ error: 'Todo not found' });
+  res.json(todo);
+}
+
+function createTodo(req, res) {
+  const newTodo = todoModel.create(req.body);
+  res.status(201).json(newTodo);
+}
+
+module.exports = { getAllTodos, getTodoById, createTodo };
+```
+
+`routes/todos.js` - the wiring, and nothing else:
+
+```js title="routes/todos.js"
+const express = require('express');
+const router = express.Router();
+const todoController = require('../controllers/todoController');
+
+router.get('/', todoController.getAllTodos);
+router.get('/:id', todoController.getTodoById);
+router.post('/', todoController.createTodo);
+
+module.exports = router;
+```
+
+`index.js` - just assembly now:
+
+```js title="index.js"
+const express = require('express');
+const app = express();
+const todoRoutes = require('./routes/todos');
+
+app.use(express.json());
+app.use('/todos', todoRoutes); // every path in todos.js is relative to "/todos"
+
+app.listen(3000, () => console.log('Server running on http://localhost:3000'));
+```
+
+<Callout type="react" title="React analogy">
+  `express.Router()` is like a nested `<Route path="/todos">` with its own child
+  routes inside - `app.use('/todos', todoRoutes)` mounts the whole file at that prefix, so
+  `router.get('/:id')` inside it actually means `/todos/:id`.
+</Callout>
+
+<Callout type="warn" title="One job per file">
+  If you're debugging a bug in the URL matching, you should only ever need to open `routes/`. If it's
+  a logic bug, only `controllers/`. If the data looks wrong, only `models/`. That's the whole point.
+</Callout>
+
+## Try it yourself (10 min)
+
+Take the single-file server from Lessons 01-03 and split it into this shape: create `routes/`,
+`controllers/`, and `models/` folders, move the code above into them, and confirm
+`curl http://localhost:3000/todos` still works exactly the same as before.
+
+## Quick check
+
+<Quiz
+  answer={0}
+  options={['routes/', 'controllers/', 'models/', 'index.js']}>
+  Which layer turns a URL into the right function call?
+</Quiz>
+
+<Quiz
+  answer={0}
+  options={['controllers/', 'routes/', 'models/', 'index.js']}>
+  Which layer decides what status code to send back?
+</Quiz>
+
+<Quiz
+  answer={0}
+  options={['models/', 'routes/', 'controllers/', 'index.js']}>
+  Which layer would change most if you swapped the in-memory array for a real database?
+</Quiz>
+
+## Interview angle
+
+<details>
+  <summary>How would you structure a growing Express app, and why?</summary>
+
+  Split it by responsibility into routes, controllers and models. Routes only map a URL and method to a
+  function, controllers hold the request logic and decide what response and status code to send, and
+  models own the data and how it is read or saved. Each layer can then change - or be debugged - without
+  touching the others.
+</details>
+
+<details>
+  <summary>What does `express.Router()` give you, and how does mounting work?</summary>
+
+  It creates a mini-app that holds its own routes (and can hold its own middleware). You attach it with
+  `app.use('/todos', router)`, and every path defined on the router becomes relative to that prefix - so
+  `router.get('/:id')` handles `GET /todos/:id`.
+</details>
+
+<details>
+  <summary>If you swap an in-memory array for a real database, what should change?</summary>
+
+  Ideally only the model layer. The controllers keep calling the same model functions like `getAll()` and
+  `getById()`, and the routes don't change at all. Keeping data access behind the model is what makes that
+  swap cheap.
+</details>
+
+## Key terms
+
+<Terms>
+  <Term name="Route (layer)">Wiring only: which URL + method calls which controller function.</Term>
+  <Term name="Controller">The request logic - reads `req`, decides what to do, sends `res`.</Term>
+  <Term name="Model">The data and how to get or save it; the only layer that knows where data lives.</Term>
+  <Term name={<code>express.Router()</code>}>A mountable group of routes; `app.use(prefix, router)` attaches it at a path prefix.</Term>
+</Terms>
+
+## Primary source
+
+<Note>
+  Reference: [MDN - Express Routes and Controllers](https://developer.mozilla.org/en-US/docs/Learn_web_development/Extensions/Server-side/Express_Nodejs/routes) ·
+  [Express.js official docs - express.Router()](https://expressjs.com/en/guide/routing.html#express-router).
+</Note>
+
+<AskBox>
+  **Stuck, curious, or want more depth?** Ask your teacher (Claude) anything - "where would validation
+  logic live in this structure," "do controllers ever call other controllers," anything at all.
+</AskBox>

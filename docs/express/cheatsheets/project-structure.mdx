@@ -1,0 +1,51 @@
+---
+title: 'Routes / Controllers / Models, at a Glance'
+sidebar_label: 'Project Structure'
+slug: project-structure
+description: Quick reference for the routes, controllers and models layers and how a request flows through them.
+tags: [express, project-structure, cheatsheet]
+---
+
+<LessonHeader
+  kicker="Express · Cheatsheet"
+  subtitle={<>The compressed version of Lesson 04 - for when you just need to look something up.</>}
+/>
+
+<Note>Full lesson: [Lesson 04 - Project Structure](../lessons/04-project-structure.mdx)</Note>
+
+| Layer | Job | React equivalent |
+|---|---|---|
+| `routes/` | Wiring only - URL+method → controller function | React Router config |
+| `controllers/` | Actual logic - reads req, sends res | Logic in a custom hook |
+| `models/` | The data + how to get/save it | A small API client module |
+
+<FileTree>
+
+- 📁 project-root/
+  - 📄 index.js <FileNote>- assembles app, mounts routes</FileNote>
+  - 📁 routes/
+    - 📄 todos.js
+  - 📁 controllers/
+    - 📄 todoController.js
+  - 📁 models/
+    - 📄 todoModel.js
+
+</FileTree>
+
+```js
+// index.js
+app.use('/todos', require('./routes/todos'));
+
+// routes/todos.js
+router.get('/:id', todoController.getTodoById); // = GET /todos/:id
+
+// controllers/todoController.js
+function getTodoById(req, res) { /* logic, calls model */ }
+
+// models/todoModel.js
+module.exports = { getById: (id) => /* find + return data */ };
+```
+
+<Callout type="warn" title="One job per file">
+  URL bug → check `routes/`. Logic bug → check `controllers/`. Bad data → check `models/`.
+</Callout>

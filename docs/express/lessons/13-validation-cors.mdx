@@ -1,0 +1,160 @@
+---
+title: 'Validation & CORS: Letting React Actually Talk to This'
+sidebar_label: '13 · Validation & CORS'
+sidebar_position: 13
+slug: validation-cors
+description: Request validation with express-validator, and fixing CORS so a React frontend can call your API.
+tags: [express, validation, cors]
+---
+
+<LessonHeader
+  kicker="Express · Lesson 13 of 14"
+  minutes={15}
+  subtitle={<>Upgrading manual checks to a real library, then fixing the error every frontend dev has hit.</>}
+/>
+
+<Note>
+  Quick-reference version of this lesson: [Validation & CORS Cheatsheet →](../cheatsheets/validation-cors.mdx)
+</Note>
+
+## From manual checks to express-validator
+
+Since Lesson 05 you've written `if (!title) return res.status(400)...` by hand. That's fine for
+one field - `express-validator` scales better once you have several, with types, lengths, and formats to check.
+
+```bash
+npm install express-validator
+```
+
+```js
+const { body, validationResult } = require('express-validator');
+
+router.post(
+  '/',
+  requireAuth,
+  body('title').notEmpty().withMessage('title is required').isLength({ max: 200 }),
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    next();
+  },
+  todoController.createTodo
+);
+```
+
+<Callout type="react" title="React analogy">
+  `body('title').notEmpty()` is another middleware, run before your controller - same
+  `(req, res, next)` chain from Lesson 03, just doing validation instead of logging or auth.
+</Callout>
+
+## The problem CORS solves
+
+Your React app runs on one port (say `localhost:5173`), your Express API on another
+(`localhost:3000`). Browsers block cross-origin requests by default - the **Same-Origin Policy**.
+You'll see this in your browser console:
+
+```bash
+Access to fetch at 'http://localhost:3000/todos' from origin 'http://localhost:5173'
+has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present.
+```
+
+<Callout type="warn" title="This is the browser, not your server">
+  Your Express route ran fine and sent a response - the *browser* refused to hand it to your JavaScript.
+  `curl` and Postman never show this error, because only browsers enforce it.
+</Callout>
+
+## The fix
+
+```bash
+npm install cors
+```
+
+```js
+const cors = require('cors');
+
+app.use(cors({ origin: 'http://localhost:5173' })); // your React dev server
+```
+
+This adds the `Access-Control-Allow-Origin` header the browser was looking for. Register it early -
+before your routes, alongside `express.json()`.
+
+<Callout type="warn" title="Locking it down for production">
+  `cors()` with no options allows every origin - fine for local development, too permissive for a
+  real API. Pass an explicit `origin`, as above, once you know your real frontend's URL.
+</Callout>
+
+## Try it yourself (10 min)
+
+If you have a React app handy, point a `fetch('http://localhost:3000/todos')` at your API without
+`cors()` registered - watch the console error. Add `app.use(cors())`, restart, and watch it disappear.
+
+## Quick check
+
+<Quiz
+  answer={0}
+  options={['the browser, not Express', 'Express, not the browser', 'PostgreSQL connection limits', 'the JWT signature check']}>
+  A CORS error is enforced by...
+</Quiz>
+
+<Quiz
+  answer={0}
+  options={['before the controller runs', 'after the controller runs', 'inside the model file', 'only in the .env file']}>
+  A validation middleware like `body('title').notEmpty()` should be registered...
+</Quiz>
+
+<Quiz
+  answer={0}
+  options={['never show up at all', 'show up exactly the same', 'become 500 errors instead', 'get logged to Postgres']}>
+  Testing an endpoint with `curl` instead of the browser means CORS errors...
+</Quiz>
+
+## Interview angle
+
+<details>
+  <summary>Who enforces CORS, and why doesn't `curl` ever hit a CORS error?</summary>
+
+  The browser does. Under the Same-Origin Policy, a page's JavaScript may not read a response from a
+  different origin unless the server's response includes a matching `Access-Control-Allow-Origin` header.
+  `curl` and Postman are not browsers and do not apply that policy, so they just show the response.
+</details>
+
+<details>
+  <summary>Why is `app.use(cors())` with no options risky for a production API?</summary>
+
+  With no options, the `cors` middleware allows every origin, so JavaScript on any website can call the API
+  from a user's browser and read the responses. In production you pass an explicit `origin` (the real
+  frontend's URL) so only that site is allowed.
+</details>
+
+<details>
+  <summary>Does `body('title').notEmpty()` reject an invalid request on its own?</summary>
+
+  No. An express-validator chain is middleware that runs the checks and records any errors on the request,
+  then calls `next()`. You read those errors with `validationResult(req)` and send the 400 yourself - which is
+  why the lesson adds a small middleware that returns `errors.array()` before the controller runs.
+</details>
+
+## Key terms
+
+<Terms>
+  <Term name="Same-Origin Policy">Browser rule that blocks a page's JavaScript from reading responses from a different origin (scheme, host and port).</Term>
+  <Term name="CORS">Cross-Origin Resource Sharing - the headers a server sends to tell the browser which other origins may read its responses.</Term>
+  <Term name={<code>Access-Control-Allow-Origin</code>}>The response header the browser looks for; the `cors` middleware sets it for you.</Term>
+  <Term name={<code>body()</code>}>express-validator function that starts a validation chain for a field in `req.body`.</Term>
+  <Term name={<code>validationResult()</code>}>Collects the errors recorded by validation chains so you can respond with a 400.</Term>
+</Terms>
+
+## Primary source
+
+<Note>
+  Reference: [express-validator - Official Docs](https://express-validator.github.io/docs/) ·
+  [Express.js - cors middleware](https://expressjs.com/en/resources/middleware/cors/) ·
+  [MDN - CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS).
+</Note>
+
+<AskBox>
+  **Stuck, curious, or want more depth?** Ask your teacher (Claude) anything - "why doesn't cors() need
+  to run on the client side too," "what other express-validator checks exist besides notEmpty," anything at all.
+</AskBox>

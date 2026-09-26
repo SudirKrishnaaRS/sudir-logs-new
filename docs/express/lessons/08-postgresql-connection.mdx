@@ -1,0 +1,199 @@
+---
+title: 'Connecting Express to a Real Database'
+sidebar_label: '08 · PostgreSQL + Express'
+sidebar_position: 8
+slug: postgresql-connection
+description: Installing pg and dotenv, keeping credentials in .env, creating a shared connection pool, and running a first real query.
+tags: [express, postgresql, database]
+---
+
+<LessonHeader
+  kicker="Express · Lesson 08 of 14 · Week 2"
+  minutes={15}
+  subtitle={<>Week 2 starts here: the in-memory array becomes a real PostgreSQL table.</>}
+/>
+
+<Note>
+  Quick-reference version of this lesson: [PostgreSQL Cheatsheet →](../cheatsheets/postgresql.mdx)
+</Note>
+
+<Callout type="info" title="What changes, what doesn't">
+  Only `models/todoModel.js` changes today. Routes, controllers, middleware, error handling - exactly
+  as you built them in Week 1. That's the whole point of the layered structure from Lesson 04.
+</Callout>
+
+## Install what you need
+
+```bash title="terminal"
+npm install pg dotenv
+```
+
+`pg` (node-postgres) talks to PostgreSQL. `dotenv` loads secrets from a file instead of hardcoding them.
+
+## Never hardcode credentials
+
+Create a `.env` file in your project root:
+
+```bash title=".env"
+DATABASE_URL=postgres://postgres:yourpassword@localhost:5432/tododb
+```
+
+<Callout type="warn" title="Add it to .gitignore immediately">
+  A `.env` file holds real secrets. Commit a `.gitignore` with `.env` in it
+  *before* your first commit - once a secret is pushed to a public repo, it's compromised even if you delete it later.
+</Callout>
+
+<Callout type="react" title="React analogy">
+  This is the same idea as `.env` files in Vite/Create React App (`import.meta.env` /
+  `process.env.REACT_APP_...`) - keep config out of your source code so it can differ per environment
+  (your laptop vs. production) without touching a single line of code.
+</Callout>
+
+## Loading it: dotenv
+
+At the very top of `index.js`, before anything else runs:
+
+```js title="index.js"
+require('dotenv').config();
+```
+
+Now `process.env.DATABASE_URL` holds the string from your `.env` file, anywhere in your app.
+
+## The connection pool
+
+Create `db/pool.js` - one shared pool the whole app reuses:
+
+```js title="db/pool.js"
+const { Pool } = require('pg');
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
+
+module.exports = pool;
+```
+
+<Callout type="react" title="Why a pool, not one connection">
+  Remember Lesson 00: one thread handles many requests by handing off slow work. A **pool** keeps
+  several database connections ready so multiple requests' queries can be in flight via libuv at once, instead
+  of queuing behind a single connection.
+</Callout>
+
+## Creating the table
+
+Run this once, via `psql` or any Postgres GUI:
+
+```sql
+CREATE TABLE todos (
+  id SERIAL PRIMARY KEY,
+  title TEXT NOT NULL,
+  completed BOOLEAN DEFAULT false
+);
+```
+
+## Your first real query
+
+```js
+const pool = require('./db/pool');
+
+pool.query('SELECT * FROM todos').then((result) => {
+  console.log(result.rows); // an array of real rows from Postgres
+});
+```
+
+`pool.query()` returns a **Promise** - it's async, handed off to libuv exactly like the
+`setTimeout` in Lesson 00. Your code doesn't block waiting for the database to respond.
+
+## Updated folder
+
+<FileTree>
+
+- 📁 project-root/
+  - 📄 .env <FileNote>- DATABASE_URL, never committed</FileNote>
+  - 📄 index.js
+  - 📁 db/
+    - 📄 pool.js <FileNote>- shared connection pool</FileNote>
+  - 📁 routes/
+    - 📄 todos.js
+  - 📁 controllers/
+    - 📄 todoController.js
+  - 📁 models/
+    - 📄 todoModel.js <FileNote>- rewritten in Lesson 09</FileNote>
+
+</FileTree>
+
+## Try it yourself (10 min)
+
+1. Install PostgreSQL locally if you haven't (or use a free hosted instance).
+2. Create the `tododb` database and the `todos` table above.
+3. Add `require('dotenv').config()` to the top of `index.js`, create `db/pool.js`.
+4. Add a temporary line in `index.js`: `pool.query('SELECT NOW()').then(r => console.log(r.rows))` -
+   confirm you see a real timestamp back, then remove the line.
+
+## Quick check
+
+<Quiz
+  answer={0}
+  options={['reuse several DB connections', 'encrypt your SQL queries', 'validate incoming request bodies', 'replace Express middleware entirely']}>
+  A connection pool exists mainly to...
+</Quiz>
+
+<Quiz
+  answer={0}
+  options={['.env, never committed', 'index.js, hardcoded directly', 'package.json, as scripts', 'the routes folder itself']}>
+  Database credentials belong in...
+</Quiz>
+
+<Quiz
+  answer={0}
+  options={['Promise, resolved later', 'plain array immediately', 'string of raw SQL', 'an Express route handler']}>
+  `pool.query()` returns a...
+</Quiz>
+
+## Interview angle
+
+<details>
+  <summary>What's the difference between a `Pool` and a `Client` in node-postgres?</summary>
+
+  A `Client` is a single connection to Postgres. A `Pool` manages several clients and hands them out as
+  needed: `pool.query()` checks a client out, runs the query and returns it to the pool automatically.
+  For work that must run on one connection, like a transaction, you check a client out with
+  `pool.connect()` and must call `client.release()` when you're done.
+</details>
+
+<details>
+  <summary>Why create the pool once in its own module instead of inside each request?</summary>
+
+  Opening a database connection is slow, and a pool is meant to be long-lived so its connections get
+  reused across requests. Node caches modules after the first `require()`, so every file that requires
+  `db/pool.js` gets the same pool instance.
+</details>
+
+<details>
+  <summary>Why must `require('dotenv').config()` run before anything else?</summary>
+
+  It copies the values from `.env` into `process.env`. Any module that reads `process.env.DATABASE_URL`
+  while it loads - such as `db/pool.js` creating the pool - would see `undefined` if dotenv hadn't run yet.
+</details>
+
+## Key terms
+
+<Terms>
+  <Term name={<code>pg</code>}>node-postgres, the library that lets Node talk to PostgreSQL.</Term>
+  <Term name={<code>.env</code>}>A file of environment variables (like `DATABASE_URL`) kept out of source control.</Term>
+  <Term name={<code>process.env</code>}>The object holding environment variables at runtime; dotenv fills it from `.env`.</Term>
+  <Term name="Connection pool">A set of reusable database connections shared by the whole app.</Term>
+  <Term name={<code>pool.query()</code>}>Runs one SQL query on a pooled connection and returns a Promise of the result.</Term>
+</Terms>
+
+## Primary source
+
+<Note>
+  Reference: [node-postgres official documentation](https://node-postgres.com/) ·
+  [dotenv - official npm docs](https://www.npmjs.com/package/dotenv).
+</Note>
+
+<AskBox>
+  **Stuck, curious, or want more depth?** Ask your teacher (Claude) anything - "what's the difference
+  between a pool and a client," "how many connections should a pool hold," anything at all.
+</AskBox>

@@ -1,0 +1,35 @@
+---
+title: 'Validation & CORS, at a Glance'
+sidebar_label: 'Validation & CORS'
+sidebar_position: 13
+slug: validation-cors
+description: Quick reference for express-validator request validation and the cors middleware.
+tags: [express, validation, cors, cheatsheet]
+---
+
+<LessonHeader
+  kicker="Express · Cheatsheet"
+  subtitle={<>The compressed version of Lesson 13 - for when you just need to look something up.</>}
+/>
+
+<Note>Full lesson: [Lesson 13 - Validation & CORS](../lessons/13-validation-cors.mdx)</Note>
+
+```js
+const { body, validationResult } = require('express-validator');
+
+router.post('/', body('title').notEmpty(), (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+  next();
+}, todoController.createTodo);
+```
+
+```js
+const cors = require('cors');
+app.use(cors({ origin: 'http://localhost:5173' })); // before your routes
+```
+
+<Callout type="warn" title="Always remember">
+  CORS is enforced by the **browser**, not your server - `curl`/Postman never show it.
+  `cors()` with no options allows every origin; pass an explicit one for production.
+</Callout>

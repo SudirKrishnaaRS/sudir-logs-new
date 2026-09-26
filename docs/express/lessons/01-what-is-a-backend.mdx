@@ -1,0 +1,146 @@
+---
+title: 'What Is a Backend, Really?'
+sidebar_label: '01 · What Is a Backend?'
+sidebar_position: 1
+slug: what-is-a-backend
+description: The request/response cycle, what req and res hold, and your first complete Express server.
+tags: [express, http, basics]
+---
+
+<LessonHeader
+  kicker="Express · Lesson 01 of 14"
+  minutes={15}
+  subtitle={<>The other end of every <code>fetch()</code> call you've ever written.</>}
+/>
+
+<Note>
+  Quick-reference version of this lesson: [Request/Response Cheatsheet →](../cheatsheets/request-response.mdx)
+</Note>
+
+<Callout type="react" title="Start from what you know">
+  In React, you've written `fetch('/api/todos')` a hundred times and trusted that
+  *something* answers. Today you become the thing that answers.
+</Callout>
+
+## The request/response cycle
+
+Every time your React app calls `fetch()` or `axios.get()`, this happens:
+
+<Flow label="React app sends an HTTP request to the Express server, which sends an HTTP response back for React to render">
+  <Step type="client">React app<small><code>fetch('/api/todos')</code></small></Step>
+  <Step>HTTP request<small>travels over network</small></Step>
+  <Step>Express server<small>a route handler runs</small></Step>
+  <Step>HTTP response<small>JSON goes back</small></Step>
+  <Step type="client">React app<small>renders the data</small></Step>
+</Flow>
+
+An Express server's entire job is the middle box: **receive a request, decide what to do, send a response.**
+That's it. Everything you'll learn this course - routing, middleware, databases, auth - is detail inside that one box.
+
+| Piece | What it holds | React equivalent |
+|---|---|---|
+| `req` (request) | Everything the client sent: URL, params, query, body | The arguments you pass into `fetch()` |
+| `res` (response) | What you send back: JSON, status code, headers | What the `fetch()` promise resolves to |
+
+## Hello, server
+
+This is a complete, real Express server. Every production Express app is built from more of this same shape - nothing more magical is coming later.
+
+```js title="index.js"
+const express = require('express');
+const app = express();
+
+// A route: when a GET request hits "/", run this function.
+app.get('/', (req, res) => {
+  res.send('Hello from your first backend!');
+});
+
+app.listen(3000, () => {
+  console.log('Server running on http://localhost:3000');
+});
+```
+
+<Callout type="react" title="React analogy">
+  `app.get('/', (req, res) => {...})` is the backend version of a functional component:
+  it's a function that takes input (`req`) and produces output (`res`).
+  The route path (`'/'`) is like a React Router path.
+</Callout>
+
+## Try it yourself (10 min)
+
+1. Make a folder, then run: `npm init -y`
+2. Install Express: `npm install express`
+3. Save the code above as `index.js`
+4. Run it: `node index.js`
+5. Open `http://localhost:3000` in your browser - you should see the message.
+
+<Callout type="warn" title="If it doesn't work">
+  Port already in use? Change `3000` to `3001`. "Cannot find module 'express'"?
+  Make sure you ran `npm install express` in the same folder as `index.js`.
+  Ask your teacher (Claude) if you get stuck - that's what it's here for.
+</Callout>
+
+## Quick check
+
+<Quiz
+  answer={1}
+  options={['A React component waiting', 'An Express route handler', 'A CSS stylesheet file', 'A browser fetch wrapper']}>
+  In your React app you call `fetch('/api/todos')`. What's actually on the other end handling it?
+</Quiz>
+
+<Quiz
+  answer={1}
+  options={['Inside the browser tab', 'On a separate server', 'Inside each component file', 'Inside the CSS bundle']}>
+  Where does your Express server actually run, relative to your React app?
+</Quiz>
+
+## Interview angle
+
+<details>
+  <summary>Walk me through what happens when a React app calls `fetch('/api/todos')`.</summary>
+
+  The browser sends an HTTP request over the network to the server. Express matches the request's method
+  and path to a route and runs that route's handler with `req` (everything the client sent) and `res`
+  (the tools for replying). The handler sends a response, typically JSON with a status code, and the
+  `fetch()` promise in the browser resolves with it so React can render the data.
+</details>
+
+<details>
+  <summary>What are `req` and `res` in an Express route handler?</summary>
+
+  `req` is the request object: the URL, route params, query string, headers and body the client sent.
+  `res` is the response object: you use it to set the status code and headers and send data back, for
+  example with `res.send()` or `res.json()`. A handler reads from `req` and finishes by responding through `res`.
+</details>
+
+<details>
+  <summary>What does `app.listen(3000)` do?</summary>
+
+  It starts an HTTP server that listens for connections on port 3000 and hands each incoming request to your
+  Express app. Until `listen` is called, the routes are defined but nothing is accepting requests. The
+  optional callback runs once the server has started listening.
+</details>
+
+## Key terms
+
+<Terms>
+  <Term name="Backend">The server-side code that receives requests, decides what to do and sends responses.</Term>
+  <Term name="Request/response cycle">Client sends an HTTP request, the server handles it and sends one HTTP response back.</Term>
+  <Term name={<code>req</code>}>The request object: everything the client sent (URL, params, query, body).</Term>
+  <Term name={<code>res</code>}>The response object: how you send back JSON, a status code and headers.</Term>
+  <Term name={<code>app.listen()</code>}>Starts the server on a port so it can accept requests.</Term>
+</Terms>
+
+## Primary source
+
+<Note>
+  Watch the first ~15 minutes of [Traversy Media's Express Crash Course](https://www.youtube.com/watch?v=CnH3kAXSrmU)
+  (setup + first server) - fast, practical, matches this lesson exactly.
+  Reference: [Express.js official routing guide](https://expressjs.com/en/guide/routing/).
+</Note>
+
+<AskBox>
+  **Stuck, curious, or want more depth?** Ask your teacher (Claude) anything about this lesson -
+  "why does `app.listen` need a port," "what if I don't call `res.send`," anything.
+  That's what it's here for.
+</AskBox>

@@ -1,0 +1,50 @@
+---
+title: 'CRUD, at a Glance'
+sidebar_label: 'Request Data & CRUD'
+slug: crud
+description: Quick reference for CRUD verbs and status codes, validating req.body, and the in-memory model shape.
+tags: [express, crud, cheatsheet]
+---
+
+<LessonHeader
+  kicker="Express · Cheatsheet"
+  subtitle={<>The compressed version of Lesson 05 - for when you just need to look something up.</>}
+/>
+
+<Note>Full lesson: [Lesson 05 - Request Data & CRUD](../lessons/05-request-data-crud.mdx)</Note>
+
+<CheatGrid>
+  <CheatCard tone="info" title="READ" use="GET /todos, GET /todos/:id" ex="200 OK" />
+  <CheatCard tone="ok" title="CREATE" use="POST /todos" ex="201 Created" />
+  <CheatCard tone="warn" title="UPDATE" use="PUT /todos/:id" ex="200 OK" />
+  <CheatCard tone="danger" title="DELETE" use="DELETE /todos/:id" ex="204 No Content" />
+</CheatGrid>
+
+## Validate before you use req.body
+
+```js
+function createTodo(req, res) {
+  const { title } = req.body;
+  if (!title) return res.status(400).json({ error: 'title is required' });
+
+  const newTodo = todoModel.create({ title });
+  res.status(201).json(newTodo);
+}
+```
+
+<Callout type="warn" title="Always remember">
+  `req.body` only exists because of `app.use(express.json())`. A client can send anything -
+  or nothing - check before you use it.
+</Callout>
+
+## Full model shape (in-memory)
+
+```js
+module.exports = {
+  getAll: () => todos,
+  getById: (id) => todos.find(t => t.id === Number(id)),
+  create: (data) => { /* push + return new todo */ },
+  update: (id, data) => { /* find, mutate, return or null */ },
+  remove: (id) => { /* splice, return true/false */ },
+};
+```

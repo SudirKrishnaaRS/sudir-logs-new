@@ -172,7 +172,11 @@ div[class*='codeBlockTitle'] {
   border-bottom: 1px solid #ffffff14 !important;
 }
 
-.markdown table { display: table; width: 100%; font-size: 0.95rem; }
+.markdown table { font-size: 0.95rem; }
+/* Full-width tables on wide screens; on phones keep Infima's scrollable block table */
+@media (min-width: 997px) {
+  .markdown table { display: table; width: 100%; }
+}
 .markdown table thead tr { background: var(--sl-hover); }
 .markdown table tr:nth-child(2n) { background: transparent; }
 

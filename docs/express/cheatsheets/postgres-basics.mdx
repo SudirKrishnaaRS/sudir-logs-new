@@ -1,0 +1,53 @@
+---
+title: 'SQL Fundamentals, at a Glance'
+sidebar_label: 'PostgreSQL Basics'
+slug: postgres-basics
+description: Quick reference for raw SQL CRUD, foreign keys, joins, aggregations, indexes and transactions.
+tags: [express, postgresql, sql, cheatsheet]
+---
+
+<LessonHeader
+  kicker="Express · Cheatsheet"
+  subtitle={<>The compressed version of the Postgres Basics prerequisite - for when you just need to look something up.</>}
+/>
+
+<Note>Full lesson: [Prerequisite 00b - PostgreSQL & SQL Fundamentals](../lessons/00b-postgres-basics.mdx)</Note>
+
+| Operation | Syntax |
+|---|---|
+| Read | `SELECT * FROM todos WHERE id = 1;` |
+| Create | `INSERT INTO todos (title) VALUES ('Buy milk');` |
+| Update | `UPDATE todos SET title = '...' WHERE id = 1;` |
+| Delete | `DELETE FROM todos WHERE id = 1;` |
+
+```sql
+ALTER TABLE todos ADD COLUMN user_id INTEGER REFERENCES users(id);
+
+SELECT users.email, todos.title
+FROM users
+INNER JOIN todos ON todos.user_id = users.id;
+
+SELECT users.email, COUNT(todos.id) AS todo_count
+FROM users
+LEFT JOIN todos ON todos.user_id = users.id
+GROUP BY users.email;
+```
+
+| Join | Keeps |
+|---|---|
+| INNER JOIN | Only rows matching in both tables |
+| LEFT JOIN | All of the left table, matched or not |
+| RIGHT JOIN | All of the right table, matched or not |
+| FULL OUTER JOIN | Every row from both, matched or not |
+
+```sql
+CREATE INDEX idx_todos_user_id ON todos(user_id);
+```
+
+<Callout type="warn" title="Always remember">
+  Everything between `BEGIN` and `COMMIT` is one atomic unit - both writes land, or neither does.
+</Callout>
+
+<Note>
+  Structure inspired by [RoadsideCoder's Postgres notes](https://notes.roadsidecoder.com/notes/postgres-tutorial) - diagrams here are original, not reproduced from that source.
+</Note>

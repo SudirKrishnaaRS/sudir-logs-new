@@ -1,0 +1,208 @@
+---
+title: 'Auth Part 1: Hashing Passwords, Issuing Tokens'
+sidebar_label: '11 · Auth 1: bcrypt & JWT'
+sidebar_position: 11
+slug: auth-bcrypt-jwt
+description: Hashing passwords with bcrypt on register, comparing them on login, and issuing a signed JWT.
+tags: [express, auth, bcrypt, jwt]
+---
+
+<LessonHeader
+  kicker="Express · Lesson 11 of 14"
+  minutes={15}
+  subtitle={<>Never store a password. Store proof you can check it later.</>}
+/>
+
+<Note>
+  Quick-reference version of this lesson: [Auth Tokens Cheatsheet →](../cheatsheets/auth-tokens.mdx)
+</Note>
+
+## A new table
+
+```sql
+CREATE TABLE users (
+  id SERIAL PRIMARY KEY,
+  email TEXT UNIQUE NOT NULL,
+  password TEXT NOT NULL
+);
+```
+
+That `password` column never holds a real password - only a hash of one.
+
+## Install
+
+```bash title="terminal"
+npm install bcrypt jsonwebtoken
+```
+
+## Why hash at all
+
+<Callout type="warn" title="If your database ever leaks">
+  A plaintext password column hands every user's real password to whoever
+  stole the data - and most people reuse passwords across sites. A
+  **hash** is one-way: even you can't turn it back into the
+  original password.
+</Callout>
+
+## Registering: hash, then store
+
+```js
+const bcrypt = require('bcrypt');
+
+async function register(req, res, next) {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ error: 'email and password are required' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10); // 10 = cost factor
+    const user = await userModel.create({ email, password: hashedPassword });
+
+    res.status(201).json({ id: user.id, email: user.email }); // never send the hash back
+  } catch (err) {
+    next(err);
+  }
+}
+```
+
+<Callout type="react" title="The cost factor">
+  `10` controls how slow the hash is to compute - deliberately
+  slow, so brute-forcing millions of guesses against a stolen hash takes
+  meaningfully longer. Higher = slower = more secure, up to a point where
+  logins get sluggish.
+</Callout>
+
+## Logging in: compare, then issue a token
+
+```js
+const jwt = require('jsonwebtoken');
+
+async function login(req, res, next) {
+  try {
+    const { email, password } = req.body;
+    const user = await userModel.findByEmail(email);
+    if (!user) return res.status(401).json({ error: 'Invalid credentials' });
+
+    const passwordMatches = await bcrypt.compare(password, user.password);
+    if (!passwordMatches) return res.status(401).json({ error: 'Invalid credentials' });
+
+    const token = jwt.sign(
+      { userId: user.id },
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
+    );
+
+    res.json({ token });
+  } catch (err) {
+    next(err);
+  }
+}
+```
+
+`bcrypt.compare` hashes the login attempt the same way and
+checks if the hashes match - the original password is never recovered,
+just re-verified.
+
+<Callout type="warn" title="Same wording on purpose">
+  "Invalid credentials" for both a wrong email *and* a wrong
+  password - telling an attacker which one was wrong helps them guess
+  which emails are registered.
+</Callout>
+
+## What's actually inside a JWT
+
+A JWT is three base64 parts joined by dots:
+`header.payload.signature`. The payload (`{ userId: 7 }`
+here) is just base64-encoded, not encrypted - readable by anyone who has
+the token. The **signature** is what makes it trustworthy:
+it proves your server issued it and nobody edited it, using
+`process.env.JWT_SECRET` - a second secret that belongs in
+`.env`, alongside `DATABASE_URL`.
+
+<Callout type="warn" title="Never put secrets in the payload">
+  Anyone can decode a JWT's payload without the secret - they just can't
+  forge a valid signature for a payload they invented. Don't put a
+  password or anything sensitive inside it.
+</Callout>
+
+## Try it yourself (10 min)
+
+Paste the token into
+[jwt.io](https://jwt.io)'s
+debugger - you'll see your `userId` readable in the payload,
+exactly as described above.
+
+## Quick check
+
+<Quiz
+  answer={0}
+  options={['a one-way bcrypt hash', 'plaintext, for simplicity', 'a reversible encryption', 'a JWT token instead']}>
+  A database should store a user's password as...
+</Quiz>
+
+<Quiz
+  answer={0}
+  options={['re-hashing and comparing hashes', 'decrypting the stored hash', 'sending both to Postgres', 'checking string length only']}>
+  `bcrypt.compare(password, hash)` works by...
+</Quiz>
+
+<Quiz
+  answer={0}
+  options={['readable, but tamper-proof', 'fully encrypted always', 'stored only in Postgres', 'the user\'s real password']}>
+  A JWT's payload is...
+</Quiz>
+
+## Interview angle
+
+<details>
+  <summary>Why hash passwords instead of encrypting them?</summary>
+
+  Encryption is reversible by anyone holding the key, so a leak of the key exposes every password.
+  A hash is one-way: the server never needs the original password back, only to check a login attempt
+  against it. `bcrypt.compare` re-hashes the attempt and compares the results.
+</details>
+
+<details>
+  <summary>What does the bcrypt cost factor control, and why is slow good?</summary>
+
+  It sets how much work each hash takes; each step up roughly doubles the time. A deliberately slow hash
+  makes brute-forcing guesses against a stolen hash far more expensive, while a single login still stays
+  fast enough. The trade-off is that setting it too high makes logins sluggish.
+</details>
+
+<details>
+  <summary>Is the data inside a JWT secret? What stops someone editing it?</summary>
+
+  No - the header and payload are only base64url-encoded, so anyone with the token can read them. What
+  protects it is the signature, created with the server's secret (`JWT_SECRET`): if anyone changes the
+  payload, `jwt.verify` fails because the signature no longer matches. That is why sensitive data never
+  goes in the payload.
+</details>
+
+## Key terms
+
+<Terms>
+  <Term name="Hash">A one-way transformation of a value; you can check a guess against it but not reverse it.</Term>
+  <Term name="Cost factor">The number passed to `bcrypt.hash` (e.g. `10`) that controls how slow hashing is.</Term>
+  <Term name="JWT">JSON Web Token: `header.payload.signature`, readable by anyone but signed so it cannot be edited.</Term>
+  <Term name={<code>jwt.sign()</code>}>Creates a signed token from a payload, a secret and options like `expiresIn`.</Term>
+  <Term name={<code>bcrypt.compare()</code>}>Checks a plaintext attempt against a stored hash and resolves to `true` or `false`.</Term>
+</Terms>
+
+## Primary source
+
+<Note>
+  Reference:
+  [JWT.io - Introduction to JSON Web Tokens](https://www.jwt.io/introduction)
+  ·
+  [bcrypt - npm](https://www.npmjs.com/package/bcrypt)
+  ·
+  [jsonwebtoken - npm](https://www.npmjs.com/package/jsonwebtoken).
+</Note>
+
+<AskBox>
+  **Stuck, curious, or want more depth?** Ask your teacher (Claude)
+  anything - "how long should a token last," "what's a refresh token,"
+  anything at all.
+</AskBox>

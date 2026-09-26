@@ -1,0 +1,197 @@
+---
+title: 'Real CRUD, and the Bug That Leaks Every Row'
+sidebar_label: '09 · Real CRUD & SQL Injection'
+sidebar_position: 9
+slug: real-crud-sql-injection
+description: Rewriting the model with real Postgres queries, why string-built SQL is injectable, and how parameterized queries fix it.
+tags: [express, postgresql, security]
+---
+
+<LessonHeader
+  kicker="Express · Lesson 09 of 14 · Week 2"
+  minutes={15}
+  subtitle={<>Rewriting the model to hit Postgres for real - and the one mistake that makes it dangerous.</>}
+/>
+
+<Note>
+  Quick-reference version of this lesson: [Real CRUD Cheatsheet →](../cheatsheets/real-crud.mdx)
+</Note>
+
+## The tempting, wrong way
+
+It's natural to build a query string by gluing in the user's input directly:
+
+```js
+// DO NOT DO THIS
+function getById(id) {
+  return pool.query(`SELECT * FROM todos WHERE id = ${id}`);
+}
+```
+
+<Callout type="warn" title="This is SQL injection">
+  A user controls `id` through the URL. Send `id = "1 OR 1=1"` and the query becomes
+  `SELECT * FROM todos WHERE id = 1 OR 1=1` - which returns *every row in the table*, not just one.
+  Worse inputs can delete data entirely. This is one of the OWASP Top 10 vulnerabilities for a reason.
+</Callout>
+
+## The fix: parameterized queries
+
+`pg` supports `$1`, `$2`... placeholders. The value is sent *separately*
+from the query text, so it's never treated as SQL - just as data:
+
+```js
+function getById(id) {
+  return pool.query('SELECT * FROM todos WHERE id = $1', [id]);
+}
+```
+
+<Callout type="react" title="Why this actually works">
+  Postgres receives the query template and the values as two separate things. Even if someone sends
+  `"1 OR 1=1"` as the value, it's compared literally against the `id` column - it can never
+  change what the query *does*. This is the single most important rule in this lesson: **never
+  concatenate user input into a query string.**
+</Callout>
+
+## The full rewritten model
+
+`models/todoModel.js` - every function now returns a Promise, and reads/writes real rows:
+
+```js title="models/todoModel.js"
+const pool = require('../db/pool');
+
+module.exports = {
+  getAll: async () => {
+    const result = await pool.query('SELECT * FROM todos ORDER BY id');
+    return result.rows;
+  },
+
+  getById: async (id) => {
+    const result = await pool.query('SELECT * FROM todos WHERE id = $1', [id]);
+    return result.rows[0]; // undefined if not found
+  },
+
+  create: async (data) => {
+    const result = await pool.query(
+      'INSERT INTO todos (title) VALUES ($1) RETURNING *',
+      [data.title]
+    );
+    return result.rows[0];
+  },
+
+  update: async (id, data) => {
+    const result = await pool.query(
+      'UPDATE todos SET title = $1 WHERE id = $2 RETURNING *',
+      [data.title, id]
+    );
+    return result.rows[0]; // undefined if no row matched
+  },
+
+  remove: async (id) => {
+    const result = await pool.query('DELETE FROM todos WHERE id = $1', [id]);
+    return result.rowCount > 0; // true if a row was actually deleted
+  },
+};
+```
+
+<Callout type="warn" title="RETURNING * is doing a lot of work">
+  Without it, `INSERT`/`UPDATE` wouldn't hand back the row you just wrote. With it, you get
+  the final row - including the auto-generated `id` - in one round trip.
+</Callout>
+
+## Your controllers now need to await
+
+Every model call is now async - controllers must `await` them, and every one needs a try/catch
+that forwards failures to Lesson 06's error handler:
+
+```js title="controllers/todoController.js"
+async function getAllTodos(req, res, next) {
+  try {
+    res.json(await todoModel.getAll());
+  } catch (err) {
+    next(err); // e.g. the database is down
+  }
+}
+
+async function getTodoById(req, res, next) {
+  try {
+    const todo = await todoModel.getById(req.params.id);
+    if (!todo) return res.status(404).json({ error: 'Todo not found' });
+    res.json(todo);
+  } catch (err) {
+    next(err);
+  }
+}
+```
+
+<Note>
+  Every controller function follows this same shape now - `async`, `await` the model call, wrap in try/catch. Apply it to `createTodo`, `updateTodo`, and `deleteTodo` the same way.
+</Note>
+
+## Quick check
+
+<Quiz
+  answer={0}
+  options={['a safe value placeholder', 'a Postgres comment marker', 'an optional table alias', 'a JavaScript template literal']}>
+  In `WHERE id = $1`, the `$1` is...
+</Quiz>
+
+<Quiz
+  answer={0}
+  options={['user input becomes SQL', 'it runs noticeably slower', 'Postgres rejects the syntax', 'Express blocks the request']}>
+  Building a query with `` `WHERE id = ${id}` `` (template literal) is risky because...
+</Quiz>
+
+<Quiz
+  answer={0}
+  options={['await them inside try/catch', 'call them twice always', 'avoid using res.json', 'skip the routes layer']}>
+  Now that model functions return Promises, controllers must...
+</Quiz>
+
+## Interview angle
+
+<details>
+  <summary>What is SQL injection, and how do you prevent it?</summary>
+
+  SQL injection happens when user input is concatenated into a query string, so the input can change the
+  structure of the SQL itself - for example `1 OR 1=1` turning a single-row lookup into "every row".
+  The fix is parameterized queries: placeholders like `$1` in the SQL text, with the values passed
+  separately, so Postgres always treats them as data and never as SQL.
+</details>
+
+<details>
+  <summary>Why can't you just escape quotes in the input yourself?</summary>
+
+  Hand-rolled escaping is easy to get wrong and doesn't cover every case - the `1 OR 1=1` example
+  contains no quotes at all, because `id` is compared as a number. Parameterized queries remove the
+  problem entirely by never mixing values into the query text in the first place.
+</details>
+
+<details>
+  <summary>What does `RETURNING *` do, and what is `rowCount`?</summary>
+
+  `RETURNING *` makes an `INSERT`, `UPDATE` or `DELETE` return the affected rows, so you get the saved
+  row - including a database-generated `id` - without a second `SELECT`. `rowCount` on the pg result
+  is the number of rows the statement affected, which is how `remove` knows whether anything was deleted.
+</details>
+
+## Key terms
+
+<Terms>
+  <Term name="SQL injection">An attack where user input is interpreted as part of the SQL query, changing what it does.</Term>
+  <Term name="Parameterized query">A query whose values are sent separately from the SQL text, via placeholders.</Term>
+  <Term name={<code>$1</code>}>A pg placeholder for the first value in the query's values array (`$2` for the second, and so on).</Term>
+  <Term name={<code>RETURNING *</code>}>A Postgres clause that returns the rows an `INSERT`/`UPDATE`/`DELETE` affected.</Term>
+  <Term name={<code>rowCount</code>}>The number of rows a query affected, on the pg result object.</Term>
+</Terms>
+
+## Primary source
+
+<Note>
+  Reference: [node-postgres - Queries & parameterized values](https://node-postgres.com/features/queries) ·
+  [OWASP - SQL Injection Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html).
+</Note>
+
+<AskBox>
+  **Stuck, curious, or want more depth?** Ask your teacher (Claude) anything - "what other injection
+  types exist besides SQL," "does an ORM make this automatic," anything at all.
+</AskBox>

@@ -1,0 +1,264 @@
+---
+title: 'Routing: Telling Express Where Traffic Goes'
+sidebar_label: '02 · Routing'
+sidebar_position: 2
+slug: routing
+description: HTTP verbs, route params vs query strings, route order, and sending responses with status codes.
+tags: [express, routing]
+---
+
+<LessonHeader
+  kicker="Express · Lesson 02 of 14"
+  minutes={15}
+  subtitle={<>Same mental model as React Router - just for API requests instead of pages.</>}
+/>
+
+<Note>
+  Quick-reference version of this lesson: [Routing Cheatsheet →](../cheatsheets/routing.mdx)
+</Note>
+
+<Callout type="react" title="Start from what you know">
+  In React Router, `<Route path="/todos/:id" element={...}/>` maps a URL to a component.
+  Express routing maps a **URL + HTTP method** to a handler function. Same idea, one extra ingredient (the method).
+</Callout>
+
+## The four verbs you'll use 90% of the time
+
+Each HTTP method signals *intent*. Same URL, different verb, different job:
+
+<CheatGrid>
+  <CheatCard tone="info" title="GET" use="Read data, no side effects" ex="app.get('/todos')" />
+  <CheatCard tone="ok" title="POST" use="Create a new record" ex="app.post('/todos')" />
+  <CheatCard tone="warn" title="PUT" use="Replace/update a record" ex="app.put('/todos/:id')" />
+  <CheatCard tone="danger" title="DELETE" use="Remove a record" ex="app.delete('/todos/:id')" />
+</CheatGrid>
+
+There's a fifth, `PATCH` (partial update) - you'll see it, but `PUT` covers you for now.
+
+## Anatomy of a route path
+
+One URL, three different kinds of data. Express gives you a different object for each:
+
+<UrlAnatomy parts={[['base', '/todos'], ['param', '/7'], ['query', '?sort=asc']]}>
+  <UrlLegend kind="base">Fixed path segment</UrlLegend>
+  <UrlLegend kind="param">Route param → <code>req.params.id</code></UrlLegend>
+  <UrlLegend kind="query">Query string → <code>req.query.sort</code></UrlLegend>
+</UrlAnatomy>
+
+```js
+app.get('/todos/:id', (req, res) => {
+  const { id } = req.params;   // "7" - from the URL path
+  const { sort } = req.query;  // "asc" - from after the "?"
+
+  res.json({ id, sort });
+});
+```
+
+<Callout type="react" title="React analogy">
+  `req.params` is like reading `useParams()` in React Router.
+  `req.query` is like reading `useSearchParams()`.
+</Callout>
+
+## Other dynamic segments you'll run into
+
+`:id` is the one you'll write constantly, but it's one case of a general pattern. These four cover almost everything:
+
+| Route pattern | Example request | req.params |
+|---|---|---|
+| `/todos/:id` | `/todos/7` | `{ id: '7' }` |
+| `/users/:userId/todos/:todoId` | `/users/3/todos/9` | `{ userId: '3', todoId: '9' }` |
+| `/todos/:id?` (optional) | `/todos` *or* `/todos/7` | `{}` *or* `{ id: '7' }` |
+| `/files/*` (wildcard) | `/files/images/logo.png` | `{ 0: 'images/logo.png' }` |
+
+```js
+app.get('/todos/:id', getOneTodo);                          // one param
+app.get('/users/:userId/todos/:todoId', getUserTodo);        // multiple params - nested resource
+app.get('/todos/:id?', listOrGetTodo);                       // "?" makes the param optional
+app.get('/files/*', serveFile);                              // "*" catches anything after /files/
+```
+
+<Callout type="info" title="Express 5 changed these two">
+  The optional and wildcard rows above are Express 4 syntax. In Express 5, `?` is no longer supported, so write
+  an optional segment in braces: `/todos{/:id}`. A wildcard must be named, as in `/files/*splat`, and
+  `req.params.splat` is an array of segments (`['images', 'logo.png']`), not one string.
+  Source: [Express 5 migration guide](https://expressjs.com/en/guide/migrating-5.html#path-syntax).
+</Callout>
+
+<Callout type="warn" title="Gotcha worth remembering">
+  Every value in `req.params` and `req.query` is always a **string** - even
+  if it looks like a number. `req.params.id === 7` is `false`; you'll need
+  `Number(req.params.id)` when you compare it to a database ID later.
+</Callout>
+
+<Callout type="react" title="React analogy">
+  `/users/:userId/todos/:todoId` is exactly like nesting `<Route path="/users/:userId">`
+  with a child `<Route path="todos/:todoId">` - a param at each level of the URL.
+</Callout>
+
+## Order matters - the #1 routing gotcha
+
+Express checks routes top to bottom and runs the **first** one that matches. It never looks for a "better" match further down.
+
+<Flow label="Express checks each route in order and the first match wins">
+  <Step type="client">Request arrives</Step>
+  <Step>Check route 1</Step>
+  <Step>Check route 2</Step>
+  <Step>First match wins</Step>
+</Flow>
+
+<Callout type="warn" title="Common bug">
+  `:id` matches *any* text in that position - including the word "new". If a dynamic route
+  is defined above a specific one, it can silently steal its traffic.
+</Callout>
+
+```js
+// Wrong order: GET /todos/new never reaches its own handler
+app.get('/todos/:id', getTodoById);   // :id matches "new" too!
+app.get('/todos/new', showNewTodoForm);
+
+// Right order: specific paths first, dynamic paths last
+app.get('/todos/new', showNewTodoForm);
+app.get('/todos/:id', getTodoById);
+```
+
+## Sending a response: res.json(), res.status(), res.send()
+
+A route handler must call exactly one of these on `res`. Whichever you call is Express's signal that you're done - nothing after it will change what the client receives.
+
+| Method | What it does | Example |
+|---|---|---|
+| `res.json(data)` | Sends JSON, sets the right header for you - what you'll use almost always | `res.json({ id: 1 })` |
+| `res.send(data)` | Sends a string, Buffer, or object - more generic, less explicit than `.json()` | `res.send('Hello')` |
+| `res.status(code)` | Sets the HTTP status code - chain it before `.json()`/`.send()` | `res.status(404).json({...})` |
+| `res.end()` | Ends the response with no body at all | `res.status(204).end()` |
+
+<Callout type="warn" title="Default you should know">
+  If you never call `res.status()`, Express sends **200** automatically. You only need
+  `res.status()` when the outcome *isn't* a plain success.
+</Callout>
+
+The status code you choose is part of the response, same as the JSON body - here's the handful you'll reach for constantly:
+
+<CheatGrid>
+  <CheatCard tone="ok" title="200 OK" use="Success, returning data" ex="GET that found something" />
+  <CheatCard tone="ok" title="201 Created" use="Success, new record made" ex="POST that succeeded" />
+  <CheatCard tone="ok" title="204 No Content" use="Success, nothing to return" ex="DELETE that succeeded" />
+  <CheatCard tone="warn" title="400 Bad Request" use="Client sent invalid data" ex="missing required field" />
+  <CheatCard tone="warn" title="404 Not Found" use="No record at that id" ex="GET /todos/9999" />
+  <CheatCard tone="danger" title="500 Server Error" use="Your code broke, not theirs" ex="unhandled exception" />
+</CheatGrid>
+
+```js
+app.get('/todos/:id', (req, res) => {
+  const todo = findTodo(req.params.id);
+
+  if (!todo) {
+    return res.status(404).json({ error: 'Todo not found' }); // client error
+  }
+
+  res.json(todo); // defaults to 200 - no .status() call needed
+});
+```
+
+<Callout type="react" title="React analogy">
+  Choosing a status code is like conditionally rendering different output - `res.status(404).json(...)`
+  is the backend version of returning `<NotFound/>` instead of your normal component output.
+</Callout>
+
+<Note>
+  Lesson 06 (Error handling) goes deeper on status codes and a centralized way to handle failures - this is just the vocabulary you need for now.
+</Note>
+
+## Try it yourself (10 min)
+
+Add these routes to the `index.js` from Lesson 01:
+
+```js title="index.js"
+app.get('/todos', (req, res) => {
+  res.json([{ id: 1, title: 'Learn Express' }]);
+});
+
+app.get('/todos/:id', (req, res) => {
+  res.json({ id: req.params.id, title: 'Learn Express' });
+});
+
+app.post('/todos', (req, res) => {
+  res.status(201).json({ message: 'Todo created (we\'ll save it for real in Lesson 05)' });
+});
+```
+
+Test the `GET` ones directly in your browser. For `POST`, browsers can't do that by typing a URL - use `curl` in your terminal instead:
+
+```bash title="terminal"
+curl http://localhost:3000/todos
+curl http://localhost:3000/todos/7
+curl -X POST http://localhost:3000/todos
+```
+
+## Quick check
+
+<Quiz
+  answer={0}
+  options={['the one defined first', 'the one defined last', 'whichever path is shorter', 'both of them always']}>
+  When two route definitions could both match the same request, Express runs...
+</Quiz>
+
+<Quiz
+  answer={0}
+  options={['req.params, not req.query', 'req.query, not req.params', 'req.body, not req.headers', 'req.headers, not req.body']}>
+  For the URL `/todos/7?sort=asc`, the value `7` shows up on...
+</Quiz>
+
+<Quiz
+  answer={0}
+  options={['204', '200', '201', '404']}>
+  Your DELETE handler removes a todo successfully but has nothing to send back. Best status code?
+</Quiz>
+
+## Interview angle
+
+<details>
+  <summary>What's the difference between `req.params` and `req.query`?</summary>
+
+  `req.params` holds values captured by named segments in the route path, like `:id` in `/todos/:id`.
+  `req.query` holds the key/value pairs from the query string after the `?`. Both arrive as strings, so
+  convert them (for example with `Number()`) before comparing against numeric IDs.
+</details>
+
+<details>
+  <summary>Two routes could match the same request. Which one runs?</summary>
+
+  The one registered first. Express walks its routes top to bottom and hands the request to the first
+  match - it does not look for a more specific one further down. That's why `/todos/new` must be defined
+  before `/todos/:id`, or `:id` will capture the word "new".
+</details>
+
+<details>
+  <summary>Which status code should a successful POST and a successful DELETE return?</summary>
+
+  A POST that creates a record should return `201 Created`, usually with the new record in the body. A
+  DELETE with nothing to send back fits `204 No Content`, sent with `res.status(204).end()`. If you never
+  call `res.status()`, Express defaults to `200`.
+</details>
+
+## Key terms
+
+<Terms>
+  <Term name="Route param">A named path segment like `:id`; its value lands on `req.params`.</Term>
+  <Term name="Query string">The `?key=value` part after the path; parsed into `req.query`.</Term>
+  <Term name="HTTP method">The verb (GET, POST, PUT, DELETE) that, together with the path, picks a route.</Term>
+  <Term name={<code>res.status()</code>}>Sets the response status code; chain it before `.json()` or `.send()`.</Term>
+</Terms>
+
+## Primary source
+
+<Note>
+  Watch the routing section of [Traversy Media's Express Crash Course](https://www.youtube.com/watch?v=CnH3kAXSrmU).
+  Reference: [Express.js official routing guide](https://expressjs.com/en/guide/routing/) ·
+  [MDN: Routes and Controllers](https://developer.mozilla.org/en-US/docs/Learn_web_development/Extensions/Server-side/Express_Nodejs/routes).
+</Note>
+
+<AskBox>
+  **Stuck, curious, or want more depth?** Ask your teacher (Claude) anything - "what if two routes have
+  the exact same path and method," "why does order matter but only for dynamic segments," anything at all.
+</AskBox>

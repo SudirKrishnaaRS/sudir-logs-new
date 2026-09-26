@@ -1,0 +1,34 @@
+---
+title: 'Password Hashing & JWTs, at a Glance'
+sidebar_label: 'Auth: bcrypt + JWT'
+slug: auth-tokens
+description: The bcrypt hash/compare and jwt.sign calls for register and login, and what each piece of a JWT means.
+tags: [express, auth, bcrypt, jwt, cheatsheet]
+---
+
+<LessonHeader
+  kicker="Express · Cheatsheet"
+  subtitle={<>The compressed version of Lesson 11 - for when you just need to look something up.</>}
+/>
+
+<Note>Full lesson: [Lesson 11 - Auth Part 1: Hashing Passwords, Issuing Tokens](../lessons/11-auth-bcrypt-jwt.mdx)</Note>
+
+```js
+// register
+const hashedPassword = await bcrypt.hash(password, 10);
+
+// login
+const ok = await bcrypt.compare(password, user.password);
+const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+```
+
+| Term | What it means |
+|---|---|
+| `bcrypt.hash` | One-way hash of a password, safe to store |
+| `bcrypt.compare` | Re-hashes an attempt and checks it matches |
+| JWT payload | Readable by anyone - never put secrets in it |
+| JWT signature | Proves your server issued it, using `JWT_SECRET` |
+
+<Callout type="warn" title="Always remember">
+  Never store plaintext passwords. Never put secrets inside a JWT payload - it's signed, not encrypted.
+</Callout>

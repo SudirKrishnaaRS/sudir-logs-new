@@ -1,0 +1,272 @@
+---
+title: 'Capstone: The Complete Todo API'
+sidebar_label: '07 · Capstone: Todo API'
+sidebar_position: 7
+slug: capstone-todo-api
+description: Week 1 assembled - the full routes/controllers/models Todo API with middleware and error handling, plus a testing checklist.
+tags: [express, capstone]
+---
+
+<LessonHeader
+  kicker="Express · Lesson 07 of 14 · Capstone"
+  minutes={20}
+  subtitle={<>Week 1, assembled. Everything from Lessons 00-06, working together in one real app.</>}
+/>
+
+<Callout type="info" title="No new concepts today">
+  This lesson doesn't teach anything new - it's where everything you've learned so far becomes one working thing.
+  That's deliberate: consolidating what you know is as important as learning it in the first place.
+</Callout>
+
+## What Week 1 built
+
+| Lesson | What it gave you |
+|---|---|
+| 00 | Why async code doesn't block (event loop & libuv) |
+| 01 | The request/response cycle, a hello-world server |
+| 02 | Routing, route params vs. query, `res.json`/`res.status` |
+| 03 | Middleware, `app.use`, `express.json()` |
+| 04 | routes/controllers/models split, `express.Router()` |
+| 05 | `req.body`, full CRUD, manual validation |
+| 06 | Centralized error handling, catch-all 404 |
+
+## Challenge: rebuild it from memory first
+
+Before looking at the full listing below, try rebuilding all four files yourself, using only these as hints.
+This is the part that actually builds the skill - reading the answer first skips it:
+
+- `models/todoModel.js` - the in-memory array + `getAll/getById/create/update/remove`
+- `controllers/todoController.js` - reads req, validates `req.body`, calls the model, sends the right status code
+- `routes/todos.js` - wires the 5 URLs to their controller functions via `express.Router()`
+- `index.js` - logger middleware, `express.json()`, mounts routes, catch-all 404, error handler - in that order
+
+## The complete, final code
+
+`models/todoModel.js`:
+
+```js title="models/todoModel.js"
+let todos = [{ id: 1, title: 'Learn Express' }];
+let nextId = 2;
+
+module.exports = {
+  getAll: () => todos,
+  getById: (id) => todos.find(t => t.id === Number(id)),
+  create: (data) => {
+    const todo = { id: nextId++, title: data.title };
+    todos.push(todo);
+    return todo;
+  },
+  update: (id, data) => {
+    const todo = todos.find(t => t.id === Number(id));
+    if (!todo) return null;
+    todo.title = data.title;
+    return todo;
+  },
+  remove: (id) => {
+    const index = todos.findIndex(t => t.id === Number(id));
+    if (index === -1) return false;
+    todos.splice(index, 1);
+    return true;
+  },
+};
+```
+
+`controllers/todoController.js`:
+
+```js title="controllers/todoController.js"
+const todoModel = require('../models/todoModel');
+
+function getAllTodos(req, res) {
+  res.json(todoModel.getAll());
+}
+
+function getTodoById(req, res) {
+  const todo = todoModel.getById(req.params.id);
+  if (!todo) return res.status(404).json({ error: 'Todo not found' });
+  res.json(todo);
+}
+
+function createTodo(req, res, next) {
+  try {
+    const { title } = req.body;
+    if (!title) return res.status(400).json({ error: 'title is required' });
+    res.status(201).json(todoModel.create({ title }));
+  } catch (err) {
+    next(err);
+  }
+}
+
+function updateTodo(req, res, next) {
+  try {
+    const { title } = req.body;
+    if (!title) return res.status(400).json({ error: 'title is required' });
+    const updated = todoModel.update(req.params.id, { title });
+    if (!updated) return res.status(404).json({ error: 'Todo not found' });
+    res.json(updated);
+  } catch (err) {
+    next(err);
+  }
+}
+
+function deleteTodo(req, res, next) {
+  try {
+    const deleted = todoModel.remove(req.params.id);
+    if (!deleted) return res.status(404).json({ error: 'Todo not found' });
+    res.status(204).end();
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { getAllTodos, getTodoById, createTodo, updateTodo, deleteTodo };
+```
+
+`routes/todos.js`:
+
+```js title="routes/todos.js"
+const express = require('express');
+const router = express.Router();
+const todoController = require('../controllers/todoController');
+
+router.get('/', todoController.getAllTodos);
+router.get('/:id', todoController.getTodoById);
+router.post('/', todoController.createTodo);
+router.put('/:id', todoController.updateTodo);
+router.delete('/:id', todoController.deleteTodo);
+
+module.exports = router;
+```
+
+`index.js`:
+
+```js title="index.js"
+const express = require('express');
+const app = express();
+const todoRoutes = require('./routes/todos');
+
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.url}`);
+  next();
+});
+app.use(express.json());
+
+app.use('/todos', todoRoutes);
+
+app.use((req, res) => {
+  res.status(404).json({ error: 'Route not found' });
+});
+
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: 'Something went wrong' });
+});
+
+app.listen(3000, () => console.log('Server running on http://localhost:3000'));
+```
+
+## Stretch goal (optional)
+
+Add a `completed` boolean field, end to end: default it to `false` in
+`create`, let `update` change it, and return it in every response. No new concepts -
+just applying everything above a second time, which is exactly the point.
+
+## Testing checklist
+
+Work through every path, including the ones that should fail on purpose:
+
+<Checklist>
+  <Check>`GET /todos` returns the full list, 200</Check>
+  <Check>`POST /todos` with a title creates one, 201</Check>
+  <Check>`POST /todos` with an empty body returns 400, not a crash</Check>
+  <Check>`GET /todos/:id` for a real id returns it, 200</Check>
+  <Check>`GET /todos/999` (fake id) returns 404</Check>
+  <Check>`PUT /todos/:id` updates the title, 200</Check>
+  <Check>`DELETE /todos/:id` removes it, 204, then a follow-up GET returns 404</Check>
+  <Check>`GET /nonexistent` (unmatched route) returns 404 as JSON</Check>
+</Checklist>
+
+<Note>
+  Cheatsheets worth having open while you build this:
+  [Request/Response](../cheatsheets/request-response.mdx) ·
+  [Routing](../cheatsheets/routing.mdx) ·
+  [Middleware](../cheatsheets/middleware.mdx) ·
+  [Project Structure](../cheatsheets/project-structure.mdx) ·
+  [CRUD](../cheatsheets/crud.mdx) ·
+  [Error Handling](../cheatsheets/error-handling.mdx).
+</Note>
+
+## Review: mixed check across all of Week 1
+
+<Quiz
+  label="Review"
+  answer={0}
+  options={['the one written first', 'the one written last', 'whichever has fewer segments', 'both of them together']}>
+  If two routes could both match one request, Express runs...
+</Quiz>
+
+<Quiz
+  label="Review"
+  answer={0}
+  options={['before routes read body', 'after routes read body', 'only in controllers themselves', 'inside the error handler']}>
+  `app.use(express.json())` must be registered...
+</Quiz>
+
+<Quiz
+  label="Review"
+  answer={0}
+  options={['204', '200', '201', '404']}>
+  A successful DELETE with nothing to send back should return status...
+</Quiz>
+
+<Quiz
+  label="Review"
+  answer={0}
+  options={['four function parameters total', 'a special function name', 'being registered with app.get', 'returning a promise object']}>
+  Error-handling middleware is identified by...
+</Quiz>
+
+<Quiz
+  label="Review"
+  answer={0}
+  options={['models/', 'routes/', 'controllers/', 'index.js']}>
+  If you swapped the in-memory array for a real database, which file changes most?
+</Quiz>
+
+## What's next
+
+Week 2 replaces that in-memory array with a real PostgreSQL database - the exact same
+`models/` file, but its functions actually persist data instead of losing it every restart.
+Everything else - routes, controllers, middleware, error handling - stays exactly as you built it here.
+
+## Interview angle
+
+<details>
+  <summary>Walk me through what happens when a client sends `POST /todos` with `{"title": "Buy milk"}`.</summary>
+
+  The logger middleware prints the method and URL, then calls `next()`. `express.json()` parses the body
+  into `req.body`. Express matches the `/todos` mount, and the router sends `POST /` to `createTodo`, which
+  validates `title`, calls `todoModel.create()`, and responds with 201 and the new todo. If anything throws,
+  the catch block calls `next(err)` and the four-argument error handler responds with a JSON 500.
+</details>
+
+<details>
+  <summary>Walk me through what happens when a client requests `GET /todos/999` versus `GET /nonexistent`.</summary>
+
+  `GET /todos/999` matches the `/:id` route, so `getTodoById` runs, the model finds nothing, and the
+  controller itself returns a 404 "Todo not found". `GET /nonexistent` matches no route at all, so the
+  request falls through to the catch-all middleware after the routes, which returns a 404 "Route not found".
+  Neither case reaches the error handler, because no error was passed to `next(err)`.
+</details>
+
+<details>
+  <summary>Why split the app into routes, controllers and models if it all fits in one file?</summary>
+
+  Each layer has one job: routes map URLs to functions, controllers handle the HTTP side (reading the
+  request, validating, choosing status codes), and models own the data. That separation means swapping the
+  in-memory array for a database only changes the model, while routes and controllers stay the same.
+</details>
+
+<AskBox>
+  **Stuck, curious, or want more depth?** Ask your teacher (Claude) anything - about any of Week 1,
+  not just today. This is a good moment to ask "why" questions you've been sitting on.
+</AskBox>

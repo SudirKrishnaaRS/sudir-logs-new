@@ -1,0 +1,46 @@
+---
+title: 'Parameterized Queries, at a Glance'
+sidebar_label: 'Real CRUD & SQL Injection'
+slug: real-crud
+description: Quick reference for the parameterized-query todo model and the async try/catch controller shape.
+tags: [express, postgresql, security, cheatsheet]
+---
+
+<LessonHeader
+  kicker="Express · Cheatsheet"
+  subtitle={<>The compressed version of Lesson 09 - for when you just need to look something up.</>}
+/>
+
+<Note>Full lesson: [Lesson 09 - Real CRUD, and the Bug That Leaks Every Row](../lessons/09-real-crud-sql-injection.mdx)</Note>
+
+<Callout type="warn" title="Golden rule">
+  Never concatenate user input into a query string. Always use `$1, $2...` placeholders with a values array.
+</Callout>
+
+```js title="models/todoModel.js"
+module.exports = {
+  getAll: async () => (await pool.query('SELECT * FROM todos ORDER BY id')).rows,
+  getById: async (id) => (await pool.query('SELECT * FROM todos WHERE id = $1', [id])).rows[0],
+  create: async (data) => (await pool.query(
+    'INSERT INTO todos (title) VALUES ($1) RETURNING *', [data.title]
+  )).rows[0],
+  update: async (id, data) => (await pool.query(
+    'UPDATE todos SET title = $1 WHERE id = $2 RETURNING *', [data.title, id]
+  )).rows[0],
+  remove: async (id) => (await pool.query('DELETE FROM todos WHERE id = $1', [id])).rowCount > 0,
+};
+```
+
+## Controllers must await + try/catch
+
+```js
+async function getTodoById(req, res, next) {
+  try {
+    const todo = await todoModel.getById(req.params.id);
+    if (!todo) return res.status(404).json({ error: 'Todo not found' });
+    res.json(todo);
+  } catch (err) {
+    next(err);
+  }
+}
+```

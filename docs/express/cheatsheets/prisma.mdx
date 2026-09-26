@@ -1,0 +1,33 @@
+---
+title: 'Prisma, at a Glance'
+sidebar_label: 'Prisma / ORM'
+slug: prisma
+description: Raw pg queries mapped to their Prisma equivalents, plus the setup and migration commands.
+tags: [express, prisma, orm, cheatsheet]
+---
+
+<LessonHeader
+  kicker="Express · Cheatsheet"
+  subtitle={<>The compressed version of Lesson 10 - for when you just need to look something up.</>}
+/>
+
+<Note>Full lesson: [Lesson 10 - ORM Option: Prisma](../lessons/10-orm-prisma.mdx)</Note>
+
+| Raw pg | Prisma |
+|---|---|
+| `pool.query('SELECT * FROM todos')` | `prisma.todo.findMany()` |
+| `WHERE id = $1` | `findUnique({ where: { id } })` |
+| `INSERT ... RETURNING *` | `create({ data: {...} })` |
+| `UPDATE ... RETURNING *` | `update({ where, data })` |
+| `DELETE FROM ...` | `delete({ where: { id } })` |
+
+```bash title="terminal"
+npm install prisma --save-dev && npm install @prisma/client
+npx prisma init
+npx prisma migrate dev --name init
+npx prisma generate
+```
+
+<Callout type="info" title="Remember">
+  Only `models/` changes if you adopt this - routes and controllers stay the same, same lesson as Lesson 04.
+</Callout>

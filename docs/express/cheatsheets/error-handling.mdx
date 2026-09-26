@@ -1,0 +1,57 @@
+---
+title: 'Error Handling, at a Glance'
+sidebar_label: 'Error Handling'
+slug: error-handling
+description: Quick reference for middleware ordering, the catch-all 404, the four-argument error handler and next(err).
+tags: [express, error-handling, cheatsheet]
+---
+
+<LessonHeader
+  kicker="Express · Cheatsheet"
+  subtitle={<>The compressed version of Lesson 06 - for when you just need to look something up.</>}
+/>
+
+<Note>Full lesson: [Lesson 06 - Error Handling](../lessons/06-error-handling.mdx)</Note>
+
+## Ordering (last two must be last)
+
+| Order | What |
+|---|---|
+| 1 | Regular middleware (logger, `express.json()`) |
+| 2 | Your real routes |
+| 3 | Catch-all 404 (no route matched) |
+| 4 | Error-handling middleware, 4 args - always last |
+
+```js
+// 3. catch-all 404
+app.use((req, res) => {
+  res.status(404).json({ error: 'Route not found' });
+});
+
+// 4. error handler - exactly 4 params, always last
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: 'Something went wrong' });
+});
+```
+
+## Forwarding an error
+
+```js
+try {
+  // ...
+} catch (err) {
+  next(err); // skips to the error handler
+}
+```
+
+<Flow label="A handler throws and calls next(err), which jumps to the error middleware">
+  <Step type="client">Request</Step>
+  <Step type="warn">throws, next(err)</Step>
+  <Step type="error">error middleware</Step>
+</Flow>
+
+<Callout type="warn" title="Two different gaps">
+  `next(err)` handles a route that *exists* but crashed. The catch-all 404 handles a URL that
+  *matches no route at all*. You need both.
+</Callout>

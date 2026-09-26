@@ -1,0 +1,40 @@
+---
+title: 'Auth Middleware, at a Glance'
+sidebar_label: 'Auth Middleware'
+slug: auth-middleware
+description: The requireAuth middleware, how to apply it to a route, and the Authorization header format.
+tags: [express, auth, jwt, middleware, cheatsheet]
+---
+
+<LessonHeader
+  kicker="Express · Cheatsheet"
+  subtitle={<>The compressed version of Lesson 12 - for when you just need to look something up.</>}
+/>
+
+<Note>Full lesson: [Lesson 12 - Auth Part 2: Protecting Routes](../lessons/12-auth-middleware.mdx)</Note>
+
+```js
+function requireAuth(req, res, next) {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token) return res.status(401).json({ error: 'No token provided' });
+
+  try {
+    req.user = jwt.verify(token, process.env.JWT_SECRET);
+    next();
+  } catch (err) {
+    res.status(401).json({ error: 'Invalid or expired token' });
+  }
+}
+```
+
+```js
+router.post('/', requireAuth, todoController.createTodo);
+```
+
+```bash
+Authorization: Bearer eyJhbGciOi...
+```
+
+<Callout type="warn" title="Always remember">
+  `requireAuth` goes **before** the controller in the route definition. `req.user` only exists after it runs successfully.
+</Callout>

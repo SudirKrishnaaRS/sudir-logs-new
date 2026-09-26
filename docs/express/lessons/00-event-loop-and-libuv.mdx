@@ -1,0 +1,177 @@
+---
+title: 'How Node.js Actually Runs Your Code'
+sidebar_label: '00 · Event Loop & libuv'
+sidebar_position: 0
+slug: event-loop
+description: The call stack, libuv, the callback queue and the event loop - the one diagram behind non-blocking Node.js.
+tags: [express, node, event-loop]
+---
+
+<LessonHeader
+  kicker="Express · Prerequisite 00"
+  minutes={15}
+  subtitle={<>One diagram behind every "Node is non-blocking" claim you've heard.</>}
+/>
+
+<Note>
+  Quick-reference version of this lesson: [Event Loop Cheatsheet →](../cheatsheets/event-loop.mdx)
+</Note>
+
+<Callout type="info" title="Why this is a prerequisite, not a lesson">
+  You already finished Lessons 1-3 fine without this - routing and middleware don't require it. But starting
+  Lesson 04, code gets more asynchronous (databases, file reads, auth checks), and "why do I need `await`
+  here" only makes sense once you've seen this once. Read it now, then everything after just clicks into place.
+</Callout>
+
+## The problem: one thread, many users
+
+Your JavaScript runs on a single thread - one line at a time, top to bottom, on what's called the
+**call stack**. If reading a large file took 2 seconds and *blocked* that thread, every other
+user hitting your server would freeze for those 2 seconds too. For a server handling many people at once, that's fatal.
+
+Node.js's answer: never let slow work sit on the JS thread. Hand it off, keep going, and come back to it later.
+
+## Meet libuv
+
+**libuv** is a C library bundled inside every Node.js install. It's the "hands" that do the slow
+work *outside* your JS thread - reading files, network requests, timers, database queries - using the
+operating system's own async capabilities or a background thread pool. Your JS code just says "let me know when
+this is done" and immediately moves on to the next line.
+
+## The one diagram
+
+This is the mental model behind async JavaScript in Node - walk it clockwise starting top-left:
+
+<LoopDiagram
+  nodes={[
+    {title: '1. Call Stack', detail: 'your JS code runs here, one line at a time'},
+    {title: '2. libuv', detail: 'thread pool / OS handles the slow part for you'},
+    {title: '3. Callback Queue', detail: 'finished callbacks wait their turn here'},
+    {title: '4. Event Loop', detail: '"is the call stack empty yet?"'},
+  ]}
+  arrows={[
+    {glyph: '→', label: 'async call made (fs.readFile, a DB query, setTimeout...)'},
+    {glyph: '↓', label: 'work finishes, callback placed in line'},
+    {glyph: '←', label: 'grabs the next waiting callback'},
+    {glyph: '↑', label: 'callback pushed onto the stack, runs'},
+  ]}
+  center="⟳ repeats forever while the server runs"
+/>
+
+<Callout type="react" title="You've seen a piece of this already">
+  `setTimeout(() => {}, 0)` in the browser still runs *after* your synchronous code, no matter
+  how short the delay. That's the same event loop idea - Node just also routes file/network/DB work through libuv,
+  which the browser doesn't expose the same way.
+</Callout>
+
+## Walk it through with real code
+
+```js
+console.log('first');
+
+setTimeout(() => {
+  console.log('third');
+}, 0);
+
+console.log('second');
+
+// Output, always in this order:
+// first
+// second
+// third
+```
+
+Here's why, stage by stage:
+
+1. `console.log('first')` runs immediately on the **call stack**.
+2. `setTimeout` is handed off to **libuv** - the call stack does not wait for it, even with a 0ms delay.
+3. `console.log('second')` runs next, because the call stack was free to keep going.
+4. Only once the call stack is completely empty does the **event loop** pull the finished timer's
+   callback off the **callback queue** and run `console.log('third')`.
+
+## Try it yourself (5 min)
+
+Save this as `event-loop-demo.js` and run `node event-loop-demo.js`:
+
+```js title="event-loop-demo.js"
+console.log('first');
+setTimeout(() => console.log('third'), 0);
+console.log('second');
+```
+
+<Callout type="warn" title="Prove it to yourself">
+  Change the delay to `5000` and run it again. "second" still prints before "third" - the call stack
+  always finishes first, no matter what the timer's delay is.
+</Callout>
+
+## Quick check
+
+<Quiz
+  answer={0}
+  options={['Slow work runs elsewhere', 'Every request gets threads', 'JavaScript runs work faster', 'The event loop blocks it']}>
+  Why can Node.js handle thousands of simultaneous requests using just one thread for your JS?
+</Quiz>
+
+<Quiz
+  answer={0}
+  options={['the setTimeout callback runs', 'the first console log', 'the second console log', 'nothing - it never runs']}>
+  In the demo above, which line's output prints last?
+</Quiz>
+
+<Quiz
+  answer={0}
+  options={['handling slow async work', 'compiling JavaScript to bytecode', 'rendering HTML on request', 'storing your data permanently']}>
+  libuv's job is best described as...
+</Quiz>
+
+## Interview angle
+
+<details>
+  <summary>Is Node.js single-threaded?</summary>
+
+  Your JavaScript runs on a single main thread, so only one piece of your code executes at a time. But
+  Node itself is not limited to one thread: libuv hands network I/O to the operating system's async
+  mechanisms and runs some work, such as most file system operations, on a background thread pool
+  (4 threads by default). The results come back to your JS thread as callbacks through the event loop.
+</details>
+
+<details>
+  <summary>What does the event loop actually do?</summary>
+
+  It keeps checking whether the call stack is empty. When it is, it takes the next finished callback
+  waiting in the queue and pushes it onto the stack to run. That is why a callback, even from a 0ms
+  `setTimeout`, never runs until all the synchronous code currently executing has finished.
+</details>
+
+<details>
+  <summary>What happens if a route handler runs a long synchronous loop?</summary>
+
+  It blocks the call stack for as long as the loop runs. While it is busy, the event loop cannot run any
+  other callbacks, so every other request to the server waits, even ones that need almost no work. This is
+  why slow work should be asynchronous and handed off rather than done synchronously on the JS thread.
+</details>
+
+## Key terms
+
+<Terms>
+  <Term name="Call stack">Where your synchronous JS executes, one line at a time.</Term>
+  <Term name="libuv">The C library inside Node.js that does slow work (files, network, timers) off the JS thread.</Term>
+  <Term name="Thread pool">libuv's background threads (4 by default) for work such as most file system operations.</Term>
+  <Term name="Callback queue">Where finished async callbacks wait until the call stack is empty.</Term>
+  <Term name="Event loop">Checks "is the stack empty?", then runs the next queued callback.</Term>
+</Terms>
+
+## Primary source
+
+<Note>
+  Watch Codevolution's [Node.js Tutorial #38 - libuv](https://www.youtube.com/watch?v=mVx_PzR9SPo)
+  and [Node.js Tutorial #42 - Event Loop](https://www.youtube.com/watch?v=L18RHG2DwwA) -
+  short, simple, and diagram-first, exactly like this lesson. Reference:
+  [Node.js official docs - The Event Loop](https://nodejs.org/learn/asynchronous-work/event-loop-timers-and-nexttick).
+</Note>
+
+<AskBox>
+  **Stuck, curious, or want more depth?** Ask your teacher (Claude) anything - "what's the difference
+  between the thread pool and the OS handling something directly," "where do Promises fit into this queue,"
+  anything at all. This lesson deliberately stays simple; there's more underneath if you want it.
+</AskBox>

@@ -1,0 +1,191 @@
+---
+title: 'Error Handling: One Place for Everything That Breaks'
+sidebar_label: '06 · Error Handling'
+sidebar_position: 6
+slug: error-handling
+description: Four-argument error middleware, next(err), the catch-all 404, and the correct ordering of all of it.
+tags: [express, error-handling, middleware]
+---
+
+<LessonHeader
+  kicker="Express · Lesson 06 of 14"
+  minutes={15}
+  subtitle={<>Stop repeating try/catch everywhere - catch it once, centrally.</>}
+/>
+
+<Note>
+  Quick-reference version of this lesson: [Error Handling Cheatsheet →](../cheatsheets/error-handling.mdx)
+</Note>
+
+<Callout type="react" title="Start from what you know">
+  You've used a React `<ErrorBoundary>` - one component that catches errors thrown anywhere
+  below it in the tree, so every child doesn't need its own try/catch. Express has the exact same idea:
+  one piece of middleware that catches errors from anywhere in your API.
+</Callout>
+
+## The signal: four parameters, not fewer
+
+Express doesn't use a special name to recognize error-handling middleware - it counts **function arity**.
+Exactly four parameters, in this order, and Express treats it differently from every other middleware:
+
+```js title="index.js"
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: 'Something went wrong' });
+});
+```
+
+<Callout type="warn" title="Must go last">
+  This has to be the **very last** `app.use()` in your file - after every route. Express
+  walks middleware top to bottom, same rule as Lessons 02 and 03.
+</Callout>
+
+## Getting an error there: next(err)
+
+Throwing inside an async route handler doesn't automatically reach your error middleware - you catch it
+yourself, then hand it off:
+
+```js
+async function getTodoById(req, res, next) {
+  try {
+    const todo = todoModel.getById(req.params.id);
+    if (!todo) return res.status(404).json({ error: 'Todo not found' });
+    res.json(todo);
+  } catch (err) {
+    next(err); // skip everything else, jump straight to the error handler
+  }
+}
+```
+
+`next()` with nothing means "continue normally." `next(err)` with an error means
+"abandon the normal chain, go straight to whatever has four parameters."
+
+## Two paths through your app
+
+The happy path:
+
+<Flow label="Happy path: request passes through middleware and the route handler to a response">
+  <Step type="client">Request</Step>
+  <Step>middleware</Step>
+  <Step>route handler</Step>
+  <Step type="client">Response</Step>
+</Flow>
+
+The error path - it jumps, it doesn't continue:
+
+<Flow label="Error path: the handler calls next(err) and control jumps to the error middleware">
+  <Step type="client">Request</Step>
+  <Step>middleware</Step>
+  <Step type="warn">handler throws, calls next(err)</Step>
+  <Step type="error">error middleware (4 args)</Step>
+</Flow>
+
+## The other gap: routes that don't exist at all
+
+None of the above fires if the URL simply matches **no route** - Express just sends a plain-text
+"Cannot GET /whatever" by default. Add a catch-all right before your error handler:
+
+```js title="index.js"
+// after every real route, before the error handler:
+app.use((req, res) => {
+  res.status(404).json({ error: 'Route not found' });
+});
+
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: 'Something went wrong' });
+});
+```
+
+## Full ordering, in one file
+
+| Order | What |
+|---|---|
+| 1 | Regular middleware (logger, `express.json()`) |
+| 2 | Your real routes (`app.use('/todos', todoRoutes)`) |
+| 3 | Catch-all 404 (no route matched) |
+| 4 | Error-handling middleware, 4 args - always last |
+
+## Try it yourself (10 min)
+
+Add the catch-all 404 and error handler above to the bottom of your `index.js`. Then test both gaps:
+
+```bash title="terminal"
+curl http://localhost:3000/nonexistent
+# {"error":"Route not found"}
+```
+
+<Callout type="warn" title="Break it on purpose">
+  Temporarily add `throw new Error('boom')` inside `getAllTodos`, wrapped in try/catch
+  calling `next(err)`. Hit `GET /todos` - instead of Express's default HTML crash page,
+  you get your own clean JSON 500. Remove the line when you're done.
+</Callout>
+
+## Quick check
+
+<Quiz
+  answer={0}
+  options={['having four function parameters', 'being named error handler', 'being the very first', 'returning a special value']}>
+  Express recognizes error-handling middleware by...
+</Quiz>
+
+<Quiz
+  answer={0}
+  options={['skip to error handler', 'continue to next route', 'restart the whole request', 'send response immediately now']}>
+  Calling `next(err)` instead of `next()` means...
+</Quiz>
+
+<Quiz
+  answer={0}
+  options={['after every other route', 'before every other route', 'in alphabetical file order', 'inside each controller function']}>
+  The catch-all 404 and the error-handling middleware must be registered...
+</Quiz>
+
+## Interview angle
+
+<details>
+  <summary>How does Express know a middleware is an error handler?</summary>
+
+  By its arity: a function declared with exactly four parameters `(err, req, res, next)` is treated as
+  error-handling middleware. Express skips it during normal flow and only calls it once an error has been
+  passed along with `next(err)` (or thrown synchronously inside a handler). Dropping the unused `next`
+  parameter silently turns it back into regular middleware.
+</details>
+
+<details>
+  <summary>What's the difference between a 404 handler and an error handler?</summary>
+
+  A 404 is not an error in Express's eyes - it just means no route matched, so the request falls off the
+  end of the chain. You handle it with a normal `(req, res)` middleware registered after every route. The
+  four-argument error handler goes after that, and catches anything passed to `next(err)`.
+</details>
+
+<details>
+  <summary>Why wrap async handlers in try/catch and call `next(err)`?</summary>
+
+  In Express 4, a rejected promise inside an async handler is not seen by Express, so the error never
+  reaches your error middleware and the request can hang. Catching it and calling `next(err)` hands it off
+  explicitly. Express 5 forwards rejected promises from handlers to the error middleware automatically.
+</details>
+
+## Key terms
+
+<Terms>
+  <Term name="Error-handling middleware">A middleware with four parameters `(err, req, res, next)`, registered last, that turns errors into responses.</Term>
+  <Term name={<code>next(err)</code>}>Skips the rest of the normal chain and jumps straight to the error-handling middleware.</Term>
+  <Term name="Function arity">The number of declared parameters a function has - how Express tells error middleware apart.</Term>
+  <Term name="Catch-all 404">A `(req, res)` middleware after every route that answers requests no route matched.</Term>
+</Terms>
+
+## Primary source
+
+<Note>
+  Watch the error-handling section of [Traversy Media's Express Crash Course](https://www.youtube.com/watch?v=CnH3kAXSrmU).
+  Reference: [Express.js official docs - Error Handling](https://expressjs.com/en/guide/error-handling.html).
+</Note>
+
+<AskBox>
+  **Stuck, curious, or want more depth?** Ask your teacher (Claude) anything - "why doesn't a thrown
+  error in an async function get caught automatically," "can I have more than one error-handling middleware,"
+  anything at all.
+</AskBox>

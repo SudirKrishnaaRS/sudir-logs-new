@@ -1,0 +1,161 @@
+---
+title: 'Auth Part 2: Protecting Routes'
+sidebar_label: '12 · Auth 2: Middleware'
+sidebar_position: 12
+slug: auth-middleware
+description: Reading a Bearer token, verifying it in requireAuth middleware, attaching req.user, and protecting routes.
+tags: [express, auth, jwt, middleware]
+---
+
+<LessonHeader
+  kicker="Express · Lesson 12 of 14"
+  minutes={15}
+  subtitle={<>The auth-gate middleware Lesson 03 previewed, built for real.</>}
+/>
+
+<Note>
+  Quick-reference version of this lesson: [Auth Middleware Cheatsheet →](../cheatsheets/auth-middleware.mdx)
+</Note>
+
+<Callout type="info" title="Full circle">
+  Back in Lesson 03 you saw a `requireAuth` stub. The [track overview's React → Backend table](../index.mdx) promised
+  `req.user` as Express's answer to React Context. Today both become real.
+</Callout>
+
+## How the token gets to the server
+
+The client sends the token it got from `/auth/login` on every request that needs it, in the
+`Authorization` header, prefixed with `Bearer`:
+
+```bash
+Authorization: Bearer eyJhbGciOi...
+```
+
+## The middleware
+
+`middleware/requireAuth.js`:
+
+```js title="middleware/requireAuth.js"
+const jwt = require('jsonwebtoken');
+
+function requireAuth(req, res, next) {
+  const authHeader = req.headers.authorization; // "Bearer eyJhbG..."
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({ error: 'No token provided' });
+  }
+
+  try {
+    const payload = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = payload; // { userId: 7, iat: ..., exp: ... }
+    next();
+  } catch (err) {
+    res.status(401).json({ error: 'Invalid or expired token' });
+  }
+}
+
+module.exports = requireAuth;
+```
+
+<Callout type="react" title="req.user is your Context">
+  Once `requireAuth` runs, `req.user` is available to every handler after it in the
+  chain - the same job as reading a value out of React Context, except it's populated fresh on every single request.
+</Callout>
+
+`jwt.verify` throws if the signature doesn't match (tampered or forged) or the token has expired -
+that's why it's wrapped in try/catch, unlike the middleware from Lesson 03's preview.
+
+## Applying it to routes
+
+```js
+const requireAuth = require('../middleware/requireAuth');
+
+router.get('/', requireAuth, todoController.getAllTodos);
+router.post('/', requireAuth, todoController.createTodo);
+router.put('/:id', requireAuth, todoController.updateTodo);
+router.delete('/:id', requireAuth, todoController.deleteTodo);
+```
+
+<Callout type="warn" title="Order still matters">
+  `requireAuth` is listed *before* the controller function - same rule as every middleware
+  since Lesson 03. If the token is bad, the controller never runs at all.
+</Callout>
+
+## Try it yourself (10 min)
+
+```bash title="terminal"
+# without a token - should fail
+curl http://localhost:3000/todos
+
+# with a token from Lesson 11's login - should work
+curl http://localhost:3000/todos -H "Authorization: Bearer eyJhbGciOi..."
+```
+
+## Quick check
+
+<Quiz
+  answer={0}
+  options={['req.user', 'req.body', 'req.params', 'req.query']}>
+  After `requireAuth` runs successfully, later handlers can read the logged-in user via...
+</Quiz>
+
+<Quiz
+  answer={0}
+  options={['401, request stops here', '200, request continues on', '500, always a server bug', '404, route not found']}>
+  If `jwt.verify` throws, the correct response is...
+</Quiz>
+
+<Quiz
+  answer={0}
+  options={['before the controller function', 'after the controller function', 'inside the model layer', 'only in index.js itself']}>
+  In a route definition, `requireAuth` must be listed...
+</Quiz>
+
+## Interview angle
+
+<details>
+  <summary>How does a JWT-protected route work end to end?</summary>
+
+  The client sends the token from login in the `Authorization: Bearer <token>` header. An auth middleware
+  placed before the handler extracts the token and calls `jwt.verify` with the server's secret. If it is
+  valid, the decoded payload is attached as `req.user` and `next()` is called; otherwise the middleware
+  responds with 401 and the handler never runs.
+</details>
+
+<details>
+  <summary>Why is `jwt.verify` wrapped in try/catch?</summary>
+
+  The synchronous form of `jwt.verify` throws when the token is invalid - a bad signature, a malformed
+  token, or an expired `exp`. Catching it lets the middleware turn every one of those cases into a clean
+  401 response instead of an unhandled error.
+</details>
+
+<details>
+  <summary>Why 401 and not 403 when the token is missing or invalid?</summary>
+
+  401 Unauthorized means the request is not authenticated - the server does not know who you are. 403
+  Forbidden is for a user who *is* authenticated but is not allowed to do that particular thing. A missing
+  or bad token is an authentication failure, so 401 is the right code.
+</details>
+
+## Key terms
+
+<Terms>
+  <Term name="Bearer token">A token sent as `Authorization: Bearer <token>`; whoever holds it is treated as authenticated.</Term>
+  <Term name={<code>jwt.verify()</code>}>Checks a token's signature and expiry with the secret and returns the payload, or throws.</Term>
+  <Term name={<code>req.user</code>}>The decoded token payload attached by `requireAuth`, readable by every later handler.</Term>
+  <Term name={<code>requireAuth</code>}>Route-level middleware that lets the request through only with a valid token.</Term>
+</Terms>
+
+## Primary source
+
+<Note>
+  Reference: [jsonwebtoken - npm](https://www.npmjs.com/package/jsonwebtoken) ·
+  [Express.js - req.headers](https://expressjs.com/en/4x/api.html#req.headers).
+</Note>
+
+<AskBox>
+  **Stuck, curious, or want more depth?** Ask your teacher (Claude) anything - "should every route
+  require auth or just some," "what happens to req.user if the token expires mid-session," anything at all.
+</AskBox>
